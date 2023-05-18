@@ -16,12 +16,20 @@ let path = (open ~/.config/tn.toml)
 let todo_file_path = $path.path
 let todo_files = ($todo_file_path + "/**/*.md")
 
-def main [
+def td [
     --all
     --done
     --project(-p): string = ""
     --context(-c): string  = ""
         ] {
+# }
+
+# def main [
+#     --all
+#     --done
+#     --project(-p): string = ""
+#     --context(-c): string  = ""
+#         ] {
 
    let filter = get_list_filter $all $done
 
