@@ -52,11 +52,13 @@ Currently only with the path to the diretory to parse.
 - [x] Support --all and --done switches 
 - [x] Support - [o] for half done indented lists
 - [x] Use toml config file for the path
-- [ ] Currently only parses text. Do this the nushell way with structured text. 
+- [x] Currently only parses text. Do this the nushell way with structured text. 
 - [ ] Group the issues into the files where they came from which maybe leaves +project beside
 - [ ] Take the project from the title of the last h1 upwards the file
 - [ ] Give back all projects or contexts like: tn --list -p
 - [ ] Create a Link directly to the file and open it in $EDITOR
+      see otn function after that
+- [ ] nvim +call cursor(<LINE>, <COLUMN>) for calling it directly on the line
 - [ ] What has been closed lately? Retrospective using git blame maybe
 - [ ] Maybe later due dates
 - [ ] Priority should be the rank within the file

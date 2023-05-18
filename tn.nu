@@ -11,25 +11,17 @@
 # Project an context can be multiple like -p BIM -p CAD
 
 
-# The path to parse
-let path = (open ~/.config/tn.toml)
-let todo_file_path = $path.path
-let todo_files = ($todo_file_path + "/**/*.md")
-
 def td [
     --all
     --done
     --project(-p): string = ""
     --context(-c): string  = ""
         ] {
-# }
 
-# def main [
-#     --all
-#     --done
-#     --project(-p): string = ""
-#     --context(-c): string  = ""
-#         ] {
+   # The path to parse
+   let path = (open ~/.config/tn.toml)
+   let todo_file_path = $path.path
+   let todo_files = ($todo_file_path + "/**/*.md")
 
    let filter = get_list_filter $all $done
 
@@ -37,8 +29,16 @@ def td [
 
    let tn = (get_project_context_filter $todos $project $context)
 
-   parse_to_table $tn
+   let $t = (parse_to_table $tn)
+   $t
 
+}
+
+# Open the file of the line specified with an editor
+# Doesn't work yet, because the table is out of the scope. Maybe use a module for that.
+def otd [table, line_number] {
+    nvim ([$table.file.$line_number, ".md"] |str join)
+    # nvim ([(td -c team).file.0, ".md"] |str join)  # This works on cli
 }
 
 def parse_to_table [list] {
