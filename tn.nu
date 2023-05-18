@@ -10,28 +10,29 @@ def main [
     --context(-c): string  = "" # the context
     ] {
 
-  echo $project
-  echo $context
-
    list  $project $context
    # get_project $project
 
 }
 
+# Get a List of all Work items filtered by +project and @context
 def list [project, context] {
 
+  # Get all open work items
   let list = (bat $todo_file_path | rg -e '- \[ \]') 
 
-
+  # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
       $list | rg  -w $"\\+($project)"
   } else { $list })
 
+  # Filter above filter by context or let the context_filter be the project_list if there is no context given
   let context_list = (if (($context | str length) > 2 ) {
       $project_list | rg  -w $"@($context)"
   } else { $project_list })
 
-  $context_list | mdcat
+  # Print it out
+  $context_list
 
 }
 
