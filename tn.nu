@@ -11,12 +11,16 @@
 # Project an context can be multiple like -p BIM -p CAD
 
 # TODO
-# - Take the project from the title of the last h1 upwards the file
-# - Create a Link directly to the file and open it in $EDITOR
-# - Maybe later due dates
-# - Priority should be the rank within the file
-# - What has been closed lately? Retrospective
-# - toml config file for the path
+# - [ ] Support - [o] for half done indented lists
+# - [ ] Currently only parses text. Do this the nushell way with structured text. 
+# - [ ] Group the issues into the files where they came from
+# - [ ] Take the project from the title of the last h1 upwards the file
+# - [ ] Create a Link directly to the file and open it in $EDITOR
+# - [ ] Maybe later due dates
+# - [ ] Priority should be the rank within the file
+# - [ ] What has been closed lately? Retrospective
+# - [ ] toml config file for the path
+# - [X] Support --all and --done switches 
 
 # The path to parse
 let todo_file_path = "C:\\Users\\patrick.joerg\\vimwiki\\**\\*.md"
@@ -40,12 +44,12 @@ def list [all_workitems, project, context] {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
-      $all_workitems | rg  -w $"\\+($project)"
+      $all_workitems | rg -w $"\\+($project)"
   } else { $all_workitems })
 
   # Filter above filter by context or let the context_filter be the project_list if there is no context given
   let context_list = (if (($context | str length) > 2 ) {
-      $project_list | rg  -w $"@($context)"
+      $project_list | rg -w $"@($context)"
   } else { $project_list })
 
   # Print it out
@@ -56,7 +60,7 @@ def list [all_workitems, project, context] {
 # Get all work items, either all, or all DONE. Defaults to OPEN
 def get_all_workitems [a, d] {
 
-  if $a && $d {
+  if $a and $d {
      echo "you can't have --all and --done at the same time"
      exit
    }
