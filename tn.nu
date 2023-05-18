@@ -1,7 +1,6 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
 # The path to parse
-let todo_file_path = "C:\\Users\\patrick.joerg\\vimwiki\\**\\*.md"
 let version_number = "0.0.1"
 
 def main [
@@ -18,9 +17,16 @@ def main [
 
    } else {
 
-      let all_workitems = get_all_workitems $all $done
-      list  $all_workitems $project $context
-      # get_project $project
+      if ($env.LOCALAPPDATA | path exists) {
+          let config = $env.LOCALAPPDATA + "/todo-nu/tn.toml"
+          let todo_file_path = (open $config).path
+          # $todo_file_path
+
+          let all_workitems = get_all_workitems $all $done $todo_file_path
+          list  $all_workitems $project $context 
+          # get_project $project
+
+      } else { "No config path or file found in local app folder" }
    }
 }
 
@@ -43,7 +49,7 @@ def list [all_workitems, project, context] {
 }
 
 # Get all work items, either all, or all DONE. Defaults to OPEN
-def get_all_workitems [a, d] {
+def get_all_workitems [a, d, path] {
 
   if $a and $d {
      echo "you can't have --all and --done at the same time"
@@ -51,22 +57,22 @@ def get_all_workitems [a, d] {
    }
 
   if $a {
-     let list = (bat $todo_file_path | rg -e '((- \[ \])|(- \[X\])|(- \[o\]))')
+     let list = (bat $path | rg -e '((- \[ \])|(- \[X\])|(- \[o\]))')
      $list
 
   } else if $d {
-     let list = (bat $todo_file_path | rg -e '((- \[X\])|(- \[o\]))')
+     let list = (bat $path | rg -e '((- \[X\])|(- \[o\]))')
      $list
 
   } else {
-     let list = (bat $todo_file_path | rg -e '- \[ \]')
+     let list = (bat $path | rg -e '- \[ \]')
      $list
   }
 }
 
-def get_project [project] {
+def get_project [project, path] {
 
-   let projects = (bat $todo_file_path | rg -e '^# ')
+   let projects = (bat $path | rg -e '^# ')
    $projects
 
 }
