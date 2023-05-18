@@ -23,17 +23,18 @@ def main [
     --context(-c): string  = ""
         ] {
 
-   # let all_workitems = get_all_workitems $all $done
    let filter = get_list_filter $all $done
-   # $filter
-   filter_todos $todo_files $filter
 
-   # list  $all_workitems $project $context
-   # get_project $project
+   let todos = filter_todos $todo_files $filter
 
-   # let files = get_file_list
-   # $files | table --expand
+   let tn = (get_project_context_filter $todos $project $context)
 
+   parse_to_table $tn
+
+}
+
+def parse_to_table [list] {
+   $list | lines| parse '{file}.md:{line}:{item}' | move item --before file
 }
 
 # Get a List of all Work items filtered by +project and @context
@@ -41,12 +42,12 @@ def get_project_context_filter [all_workitems, project, context] {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
-      $all_workitems | rg -tmd -w $"\\+($project)"
+      $all_workitems | rg -w $"\\+($project)"
   } else { $all_workitems })
 
   # Filter above filter by context or let the context_filter be the project_list if there is no context given
   let context_list = (if (($context | str length) > 2 ) {
-      $project_list | rg -tmd -w $"@($context)"
+      $project_list | rg -w $"@($context)"
   } else { $project_list })
 
   # Print it out
@@ -78,37 +79,7 @@ def get_list_filter [all, done] {
 }
 
 def filter_todos [list, regex] {
-    echo $list
-    let out = (rg -tmd -e $regex $list)
+
+    let out = (rg -tmd -n -e $regex $list)
     $out
-
-# def get_project [project] {
-
-#    let projects = (bat $todo_file_path | rg -tmd -e '^# ')
-#    $projects
-
 }
-
-def get_file_list [] {
-
-   let list = ($todo_files | each {|it| [$it (bat $it.name)]})
-
-   $list
-}
-
-
-# 📸  🏠
-# ✅
-# ❌
-# ⌚  📅
-# 🍺  🫕
-# 🍵  💨
-# 📢
-# 😊
-# 💩
-# 💰
-# 👥
-# 🌍
-# 🎓
-# 🏁
-# tn | lines| parse "{file}.md: {item}" | move item --before file
