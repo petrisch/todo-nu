@@ -44,7 +44,7 @@ Project an context can be multiple like -p BIM -p CAD
 # Configuration
 
 The script expects a `tn.toml` file similar to the one in this repo.
-Currently only with the path to the diretory to parse.
+Currently only with the path to the directory to parse.
 
 # TODO for Todo-nu
 
