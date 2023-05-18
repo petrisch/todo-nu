@@ -41,12 +41,17 @@ tn +CAD @team => Combinations allowed
 Project an context can be multiple like -p BIM -p CAD
 ```
 
+# Configuration
+
+The script expects a `tn.toml` file similar to the one in this repo.
+Currently only with the path to the diretory to parse.
+
 # TODO for Todo-nu
 
-- [X] Get basic functionality with filters for +project and @context
-- [X] Support --all and --done switches 
-- [X] Support - [o] for half done indented lists
-- [X] Use toml config file for the path
+- [x] Get basic functionality with filters for +project and @context
+- [x] Support --all and --done switches 
+- [x] Support - [o] for half done indented lists
+- [x] Use toml config file for the path
 - [ ] Currently only parses text. Do this the nushell way with structured text. 
 - [ ] Group the issues into the files where they came from which maybe leaves +project beside
 - [ ] Take the project from the title of the last h1 upwards the file

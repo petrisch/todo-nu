@@ -12,7 +12,8 @@
 
 
 # The path to parse
-let todo_file_path = "~/vimwiki"
+let path = (open ~/.config/tn.toml)
+let todo_file_path = $path.path
 let todo_files = ($todo_file_path + "/**/*.md")
 
 def main [
