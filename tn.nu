@@ -1,16 +1,5 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
-# Usage
-
-# tn => all open issues
-# tn --all => all issues
-# tn --done => all done issues
-# tn -p CAD => only open issues from Project CAD
-# tn --done -c team => only done issues from context team
-# tn +CAD @team => Combinations allowed
-# Project an context can be multiple like -p BIM -p CAD
-
-
 def td [
     --all
     --done
