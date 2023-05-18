@@ -59,7 +59,7 @@ def get_list_filter [all, done] {
      exit
    }
    let open_str = '(- \[ \])'
-   let done_str = '(- \[X\])'
+   let done_str = '(- \[x\])'
    let partly_str = '(- \[o\])'
 
   if $all {
