@@ -1,78 +1,113 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
+# Usage
+
+# tn => all open issues
+# tn --all => all issues
+# tn --done => all done issues
+# tn -p CAD => only open issues from Project CAD
+# tn --done -c team => only done issues from context team
+# tn +CAD @team => Combinations allowed
+# Project an context can be multiple like -p BIM -p CAD
+
+
 # The path to parse
-let version_number = "0.0.1"
+let todo_file_path = "~/vimwiki"
+let todo_files = ($todo_file_path + "/**/*.md")
 
 def main [
     --all
     --done
-    --project(-p): string = "" # the project
-    --context(-c): string  = "" # the context
-    --version
-    ] {
+    --project(-p): string = ""
+    --context(-c): string  = ""
+        ] {
 
-   if $version {
+   # let all_workitems = get_all_workitems $all $done
+   let filter = get_list_filter $all $done
+   # $filter
+   filter_todos $todo_files $filter
 
-      $version_number
+   # list  $all_workitems $project $context
+   # get_project $project
 
-   } else {
+   # let files = get_file_list
+   # $files | table --expand
 
-      if ($env.LOCALAPPDATA | path exists) {
-          let config = $env.LOCALAPPDATA + "/todo-nu/tn.toml"
-          let todo_file_path = (open $config).path
-          # $todo_file_path
-
-          let all_workitems = get_all_workitems $all $done $todo_file_path
-          list  $all_workitems $project $context 
-          # get_project $project
-
-      } else { "No config path or file found in local app folder" }
-   }
 }
 
 # Get a List of all Work items filtered by +project and @context
-def list [all_workitems, project, context] {
+def get_project_context_filter [all_workitems, project, context] {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
-      $all_workitems | rg -w $"\\+($project)"
+      $all_workitems | rg -tmd -w $"\\+($project)"
   } else { $all_workitems })
 
   # Filter above filter by context or let the context_filter be the project_list if there is no context given
   let context_list = (if (($context | str length) > 2 ) {
-      $project_list | rg -w $"@($context)"
+      $project_list | rg -tmd -w $"@($context)"
   } else { $project_list })
 
   # Print it out
   $context_list
-
 }
 
-# Get all work items, either all, or all DONE. Defaults to OPEN
-def get_all_workitems [a, d, path] {
+def get_list_filter [all, done] {
 
-  if $a and $d {
+  if ($all and $done) {
      echo "you can't have --all and --done at the same time"
      exit
    }
+   let open_str = '(- \[ \])'
+   let done_str = '(- \[X\])'
+   let partly_str = '(- \[o\])'
 
-  if $a {
-     let list = (bat $path | rg -e '((- \[ \])|(- \[X\])|(- \[o\]))')
-     $list
+  if $all {
+     let regex = ($open_str + '|' + $done_str + '|' + $partly_str)
+     $regex
 
-  } else if $d {
-     let list = (bat $path | rg -e '((- \[X\])|(- \[o\]))')
-     $list
+  } else if $done {
+     let regex = ($done_str + '|' + $partly_str)
+     $regex
 
   } else {
-     let list = (bat $path | rg -e '- \[ \]')
-     $list
+     let regex = $open_str
+     $regex
   }
 }
 
-def get_project [project, path] {
+def filter_todos [list, regex] {
+    echo $list
+    let out = (rg -tmd -e $regex $list)
+    $out
 
-   let projects = (bat $path | rg -e '^# ')
-   $projects
+# def get_project [project] {
+
+#    let projects = (bat $todo_file_path | rg -tmd -e '^# ')
+#    $projects
 
 }
+
+def get_file_list [] {
+
+   let list = ($todo_files | each {|it| [$it (bat $it.name)]})
+
+   $list
+}
+
+
+# 📸  🏠
+# ✅
+# ❌
+# ⌚  📅
+# 🍺  🫕
+# 🍵  💨
+# 📢
+# 😊
+# 💩
+# 💰
+# 👥
+# 🌍
+# 🎓
+# 🏁
+# tn | lines| parse "{file}.md: {item}" | move item --before file
