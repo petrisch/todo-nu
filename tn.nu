@@ -16,21 +16,28 @@ def td [
     --done
     --project(-p): string = ""
     --context(-c): string  = ""
+    --retro(-r): string = ""
         ] {
 
-   # The path to parse
-   let path = (open ~/.config/tn.toml)
-   let todo_file_path = $path.path
-   let todo_files = ($todo_file_path + "/**/*.md")
+   let is_not_retro = ($retro | is-empty)
 
-   let filter = get_list_filter $all $done
+   if $is_not_retro {
+       # The path to parse
+       let path = (open ~/.config/tn.toml)
+       let todo_file_path = $path.path
+       let todo_files = ($todo_file_path + "/**/*.md")
 
-   let todos = filter_todos $todo_files $filter
+       let filter = get_list_filter $all $done
 
-   let tn = (get_project_context_filter $todos $project $context)
+       let todos = filter_todos $todo_files $filter
 
-   let $t = (parse_to_table $tn)
-   $t
+       let tn = (get_project_context_filter $todos $project $context)
+
+       let $t = (parse_to_table $tn)
+       $t
+   } else {
+       get_retrospective $retro
+   }
 
 }
 
@@ -90,4 +97,13 @@ def filter_todos [list, regex] {
 
     let out = (rg -tmd -n -e $regex $list)
     $out
+}
+
+# How to get a retrospective list of all DONE things in git
+# Where time is the unix timestamp from where on the retrospective should be held
+# - [ ] Sowohl Pfad wie den regex sind nicht sauber gelöst in get_retro
+def get_retrospective [time] {
+	let revs = (git rev-list --all --max-age=$time | lines)
+	git grep -e '- \[X\]' $revs -- . | lines | parse '{rev}:{file}:{todo}' |
+	select todo | uniq
 }
