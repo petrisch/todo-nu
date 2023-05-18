@@ -16,13 +16,11 @@ def td [
        let todo_file_path = $path.path
        let todo_files = ($todo_file_path + "/**/*.md")
 
-       let filter = get_list_filter $all $done
-
-       let todos = filter_todos $todo_files $filter
-
+       let filter = (get_list_filter $all $done)
+       let todos = (filter_todos $todo_files $filter)
        let tn = (get_project_context_filter $todos $project $context)
 
-       let $t = (parse_to_table $tn)
+       let t = (parse_to_table $tn)
        $t
    } else {
        get_retrospective $retro
