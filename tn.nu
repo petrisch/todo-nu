@@ -1,42 +1,27 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
-# Usage
-
-# tn => all open issues
-# tn --all => all issues
-# tn --done => all done issues
-# tn -p CAD => only open issues from Project CAD
-# tn --done -c team => only done issues from context team
-# tn +CAD @team => Combinations allowed
-# Project an context can be multiple like -p BIM -p CAD
-
-# TODO
-# - [ ] Support - [o] for half done indented lists
-# - [ ] Currently only parses text. Do this the nushell way with structured text. 
-# - [ ] Group the issues into the files where they came from
-# - [ ] Take the project from the title of the last h1 upwards the file
-# - [ ] Create a Link directly to the file and open it in $EDITOR
-# - [ ] Maybe later due dates
-# - [ ] Priority should be the rank within the file
-# - [ ] What has been closed lately? Retrospective
-# - [ ] toml config file for the path
-# - [X] Support --all and --done switches 
-
 # The path to parse
 let todo_file_path = "C:\\Users\\patrick.joerg\\vimwiki\\**\\*.md"
+let version_number = "0.0.1"
 
 def main [
     --all
     --done
     --project(-p): string = "" # the project
     --context(-c): string  = "" # the context
+    --version
     ] {
 
-   let all_workitems = get_all_workitems $all $done
+   if $version {
 
-   list  $all_workitems $project $context
-   # get_project $project
+      $version_number
 
+   } else {
+
+      let all_workitems = get_all_workitems $all $done
+      list  $all_workitems $project $context
+      # get_project $project
+   }
 }
 
 # Get a List of all Work items filtered by +project and @context
@@ -66,11 +51,11 @@ def get_all_workitems [a, d] {
    }
 
   if $a {
-     let list = (bat $todo_file_path | rg -e '((- \[ \])|(- \[X\]))')
+     let list = (bat $todo_file_path | rg -e '((- \[ \])|(- \[X\])|(- \[o\]))')
      $list
 
   } else if $d {
-     let list = (bat $todo_file_path | rg -e '- \[X\]')
+     let list = (bat $todo_file_path | rg -e '((- \[X\])|(- \[o\]))')
      $list
 
   } else {
