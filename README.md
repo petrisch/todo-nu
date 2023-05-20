@@ -39,7 +39,8 @@ tn -p CAD => only open issues from Project CAD
 tn --done -c team => only done issues from context team
 tn -p CAD -c team => Combinations allowed
 Project and context can be multiple like -p BIM -p CAD
-tn -r 2021-01-01 gives all issues from the git history => Experimental
+tn -r 2021-01-01 gives all issues from the git history,
+      that are not older than that date => Experimental
 ```
 
 # Configuration
@@ -69,6 +70,7 @@ Currently only with the path to the directory to parse.
       see otn function after that
 - [ ] nvim +call cursor(<LINE>, <COLUMN>) for calling it directly on the line
 - [ ] Due dates functionality @maybe
+- [ ] Give it some colors and emojis 🤡  
 
 Priority should be the rank within the file,
 or is there a simple better way to do this?

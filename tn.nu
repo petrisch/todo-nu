@@ -10,22 +10,22 @@ def td [
 
    let is_not_retro = ($retro | is-empty)
 
-   if $is_not_retro {
-       # The path to parse
-       let path = (open ~/.config/tn.toml)
-       let todo_file_path = $path.path
-       let todo_files = ($todo_file_path + "/**/*.md")
+    # The path to parse
+    let PATH = (open ~/.config/tn.toml)
+    let TODO_FILE_PATH = $PATH.path
+    let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
 
+   if $is_not_retro {
        let filter = (get_list_filter $all $done)
-       let todos = (filter_todos $todo_files $filter)
+       let todos = (filter_todos $TODO_FILES $filter)
        let tn = (get_project_context_filter $todos $project $context)
 
        let t = (parse_to_table $tn)
        $t
    } else {
-       get_retrospective $retro
+       let r = (get_retrospective $retro $TODO_FILE_PATH)
+       $r
    }
-
 }
 
 # Open the file of the line specified with an editor
@@ -86,11 +86,15 @@ def filter_todos [list, regex] {
     $out
 }
 
-# How to get a retrospective list of all DONE things in git
-# Where time is the unix timestamp from where on the retrospective should be held
-# - [ ] Sowohl Pfad wie den regex sind nicht sauber gelöst in get_retro
-def get_retrospective [time] {
-	let revs = (git rev-list --all --max-age=$time | lines)
-	git grep -e '- \[X\]' $revs -- . | lines | parse '{rev}:{file}:{todo}' |
-	select todo | uniq
+# Get a retrospective list of all DONE things in git
+# - [ ] Get the regex into the retrospective as well
+def get_retrospective [time path] {
+    cd $path
+    let time_rev = (run-external --redirect-stdout "date" "-d" ($time) "+%s" 
+                   | into int)
+    let revs = (run-external --redirect-stdout "git" "rev-list" "--all" $"--max-age=($time_rev)" 
+               | lines)
+    let r = (run-external --redirect-stdout "git" "grep" "-e" '- \[x\]' $revs 
+            | lines | parse '{rev}:{file}:{todo_retro}' | select todo_retro | uniq)
+    $r
 }
