@@ -59,6 +59,8 @@ Currently only with the path to the directory to parse.
 - [x] What has been closed lately? Retrospective using git blame maybe
       => Won't do, probably not worth it
 
+- [ ] Add come tests from http://www.nushell.sh/book/testing.html 
+- [ ] Add a config for depth to show only unindented items per default
 - [ ] Group issues by files where they came from
       Not shure where this is going. In Zettelkasten flat hierarchy style wiki,
       every topic should have its own file. So +project should be the title of 

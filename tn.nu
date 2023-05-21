@@ -1,6 +1,6 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
-def td [
+export def td [
     --all
     --done
     --project(-p): string = ""
@@ -35,12 +35,18 @@ def otd [table, line_number] {
     # nvim ([(td -c team).file.0, ".md"] |str join)  # This works on cli
 }
 
-def parse_to_table [list] {
+export def parse_to_table [list] {
    $list | lines| parse '{file}.md:{line}:{item}' | move item --before file
+   # $list
+   # $list | lines| parse -r '(?P<file>\w+).md:-[{state}] {line}:{item}' | move item --before file
 }
 
+# def parse_depth [depth] {
+    
+# }
+
 # Get a List of all Work items filtered by +project and @context
-def get_project_context_filter [all_workitems, project, context] {
+export def get_project_context_filter [all_workitems, project, context] {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
@@ -56,7 +62,7 @@ def get_project_context_filter [all_workitems, project, context] {
   $context_list
 }
 
-def get_list_filter [all, done] {
+export def get_list_filter [all, done] {
 
   if ($all and $done) {
      echo "you can't have --all and --done at the same time"
@@ -80,7 +86,7 @@ def get_list_filter [all, done] {
   }
 }
 
-def filter_todos [list, regex] {
+export def filter_todos [list, regex] {
 
     let out = (rg -tmd -n -e $regex $list)
     $out
@@ -88,7 +94,7 @@ def filter_todos [list, regex] {
 
 # Get a retrospective list of all DONE things in git
 # - [ ] Get the regex into the retrospective as well
-def get_retrospective [time path] {
+export def get_retrospective [time path] {
     cd $path
     let time_rev = (run-external --redirect-stdout "date" "-d" ($time) "+%s" 
                    | into int)
