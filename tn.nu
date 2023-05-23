@@ -96,8 +96,17 @@ export def filter_todos [list, regex] {
 # - [ ] Get the regex into the retrospective as well
 export def get_retrospective [time path] {
     cd $path
-    let time_rev = (run-external --redirect-stdout "date" "-d" ($time) "+%s" 
-                   | into int)
+    # On any unix system we can assume a "date" command in the path.
+    # Since we need git for this anyway, gitforwindows comes with the date command as well.
+    # However usually this is not in the path and it would be confusing with the builtin date
+    # if it was. So to get this to work we copy git"date" as unix_date_on_windows to path.
+    # This needs also msys-2.0.dll, msys-iconv-2.dll and msys-intl-8.dll in path.
+    # Would be nice if we could do this with the builtin nu"date".
+    let time_rev = if ($nu.os-info.family == 'windows') {
+	    run-external --redirect-stdout "unix_date_on_windows" "-d" ($time) "+%s" | into int
+    } else { 
+	    run-external --redirect-stdout "date" "-d" ($time) "+%s" | into int
+	}
     let revs = (run-external --redirect-stdout "git" "rev-list" "--all" $"--max-age=($time_rev)" 
                | lines)
     let r = (run-external --redirect-stdout "git" "grep" "-e" '- \[x\]' $revs 
