@@ -96,7 +96,7 @@ export def filter_todos [list, regex] {
 # - [ ] Get the regex into the retrospective as well
 export def get_retrospective [time path] {
     cd $path
-    let time_rev = ($time | into datetime | into int)
+    let time_rev = (($time | into datetime | into int) / 1000000000)
     let revs = (run-external --redirect-stdout "git" "rev-list" "--all" $"--max-age=($time_rev)" 
                | lines)
     let r = (run-external --redirect-stdout "git" "grep" "-e" '- \[x\]' $revs 
