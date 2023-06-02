@@ -14,16 +14,16 @@ export def td [
     let PATH = (open ~/.config/tn.toml)
     let TODO_FILE_PATH = $PATH.path
     let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
+    let FILTER = (get_list_filter $all $done)
 
    if $is_not_retro {
-       let filter = (get_list_filter $all $done)
-       let todos = (filter_todos $TODO_FILES $filter)
+       let todos = (filter_todos $TODO_FILES $FILTER)
        let tn = (get_project_context_filter $todos $project $context)
 
        let t = (parse_to_table $tn)
        $t
    } else {
-       let r = (get_retrospective $retro $TODO_FILE_PATH)
+       let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
        $r
    }
 }
@@ -94,12 +94,15 @@ export def filter_todos [list, regex] {
 
 # Get a retrospective list of all DONE things in git
 # - [ ] Get the regex into the retrospective as well
-export def get_retrospective [time path] {
+export def get_retrospective [time path regex] {
     cd $path
     let time_rev = (($time | into datetime | into int) / 1000000000)
+    # In the end we skip one, because we dont want the current commit in this
+    # TODO I guess what we actually want are "those that have been deleted in the past"
+    # So we should compare older commits to the current one and take some diff
     let revs = (run-external --redirect-stdout "git" "rev-list" "--all" $"--max-age=($time_rev)" 
-               | lines)
-    let r = (run-external --redirect-stdout "git" "grep" "-e" '- \[x\]' $revs 
+               | lines | skip 1)
+    let r = (run-external --redirect-stdout "git" "grep" "-E" "-e" $regex $revs 
             | lines | parse '{rev}:{file}:{todo_retro}' | select todo_retro | uniq)
     $r
 }

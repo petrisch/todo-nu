@@ -7,7 +7,7 @@ Yet another Todo Script which:
 - Tries to be as simple as possible
 - Works for me approach
 
-# Inspiration
+## Inspiration
 
 I use a vimwiki in markdown format for my personal documentation.
 Since I am not heavily driven by dealines, but more driven by documentation,
@@ -29,7 +29,7 @@ This is some documentation
 ```
 Todo-nu parses only the todo lines and lets you filter them.
 
-# Usage
+## Usage
 
 ```
 tn => all open issues
@@ -38,10 +38,20 @@ tn --done => all done issues
 tn -p CAD => only open issues from Project CAD
 tn --done -c team => only done issues from context team
 tn -p CAD -c team => Combinations allowed
-Project and context can be multiple like -p BIM -p CAD
-tn -r 2021-01-01 gives all issues from the git history,
-      that are not older than that date => Experimental
 ```
+Project and context can be multiple like -p BIM -p CAD
+
+### WIP retrospective
+
+```
+tn -r 2021-01-01
+```
+Gives all issues from the git history,
+that are not older than that date given.
+For now doesn't give back the latest commit,
+but also gives back still open and "closed but not deleted" items.
+Should compare to what is still in use.
+But can be combined with `tn --done -r $date`
 
 # Configuration
 
