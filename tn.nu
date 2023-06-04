@@ -18,48 +18,17 @@ export def td [
 
    if $is_not_retro {
        let todos = (filter_todos $TODO_FILES $FILTER)
+       # Filter by project and context
        let tn = (get_project_context_filter $todos $project $context)
-
-       let t = (parse_to_table $tn)
-       $t
+       # Parse it to a table
+       let table = (parse_to_table $tn)
+       let t_abs_path = (abs_path_2_file $table)
+       let t_glyth = (replace_with_glyth $t_abs_path)
+       $t_glyth
    } else {
        let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
        $r
    }
-}
-
-# Open the file of the line specified with an editor
-# Doesn't work yet, because the table is out of the scope. Maybe use a module for that.
-def otd [table, line_number] {
-    nvim ([$table.file.$line_number, ".md"] |str join)
-    # nvim ([(td -c team).file.0, ".md"] |str join)  # This works on cli
-}
-
-export def parse_to_table [list] {
-   $list | lines| parse '{file}.md:{line}:{item}' | move item --before file
-   # $list
-   # $list | lines| parse -r '(?P<file>\w+).md:-[{state}] {line}:{item}' | move item --before file
-}
-
-# def parse_depth [depth] {
-    
-# }
-
-# Get a List of all Work items filtered by +project and @context
-export def get_project_context_filter [all_workitems, project, context] {
-
-  # Filter them by project or let the project_list be the list if there is no project given
-  let project_list = (if (($project | str length) > 2 ) {
-      $all_workitems | rg -w $"\\+($project)"
-  } else { $all_workitems })
-
-  # Filter above filter by context or let the context_filter be the project_list if there is no context given
-  let context_list = (if (($context | str length) > 2 ) {
-      $project_list | rg -w $"@($context)"
-  } else { $project_list })
-
-  # Print it out
-  $context_list
 }
 
 export def get_list_filter [all, done] {
@@ -68,6 +37,7 @@ export def get_list_filter [all, done] {
      echo "you can't have --all and --done at the same time"
      exit
    }
+
    let open_str = '(- \[ \])'
    let done_str = '(- \[x\])'
    let partly_str = '(- \[o\])'
@@ -92,6 +62,31 @@ export def filter_todos [list, regex] {
     $out
 }
 
+# Get a List of all Work items filtered by +project and @context
+export def get_project_context_filter [all_workitems, project, context] {
+
+  # Filter them by project or let the project_list be the list if there is no project given
+  let project_list = (if (($project | str length) > 2 ) {
+      $all_workitems | rg -w $"\\+($project)"
+  } else { $all_workitems })
+
+  # Filter above filter by context or let the context_filter be the project_list if there is no context given
+  let context_list = (if (($context | str length) > 2 ) {
+      $project_list | rg -w $"@($context)"
+  } else { $project_list })
+
+  # Print it out
+  $context_list
+}
+
+export def parse_to_table [list] {
+   $list | lines| parse '{file}.md:{line}:{todo}] {item}' | move item --before file | move todo --before item
+}
+
+export def abs_path_2_file [list] {
+    $list | update file {|row| $row.file | path basename}
+}
+
 # Get a retrospective list of all DONE things in git
 # - [ ] Get the regex into the retrospective as well
 export def get_retrospective [time path regex] {
@@ -106,3 +101,44 @@ export def get_retrospective [time path regex] {
             | lines | parse '{rev}:{file}:{todo_retro}' | select todo_retro | uniq)
     $r
 }
+
+# Open the file of the line specified with an editor
+# Doesn't work yet, because the table is out of the scope. Maybe use a module for that.
+def otd [table, line_number] {
+    nvim ([$table.file.$line_number, ".md"] |str join)
+    # nvim ([(td -c team).file.0, ".md"] |str join)  # This works on cli
+}
+
+# Replace the todo with some fancy stuff. The todo arrives like this "  - [x "
+export def replace_with_glyth [list] {
+    let t = ($list | each {|td| update todo {get_glyth (($td.todo | into string | parse '{x}[{item}').item.0)}})
+    $t
+}
+
+export def get_glyth [key] {
+
+    let glyths = ({ 
+        " ": 😏
+        "x": ✅
+        "o": 😄
+        "waiting": ⏳
+        "team": 👥
+        "date": ⏰
+        "sprint": 🏃
+    })
+
+    ($glyths | get $key)
+}
+
+# def parse_depth [depth] {
+    
+# }
+
+# export identify_todo [text] {
+    
+#    let indent = "    "
+#    let mark_pattern = {partly: 'o', done: 'x', open: ' '}
+#    let tasks = {task: "- \[$mark_pattern\]", subtask: "$indent- \[$mark_pattern\]"}
+
+#    match $text {$task.task}, _ => { 'no valid todo, wrong parse' }
+# }
