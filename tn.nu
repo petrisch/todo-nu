@@ -6,8 +6,10 @@ export def td [
     --project(-p): string = ""
     --context(-c): string  = ""
     --retro(-r): string = ""
+    --version(-v)
         ] {
 
+   let VERSION_NUMBER = "0.0.1"
    let is_not_retro = ($retro | is-empty)
 
     # The path to parse
@@ -16,7 +18,9 @@ export def td [
     let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
     let FILTER = (get_list_filter $all $done)
 
-   if $is_not_retro {
+   if $version {
+       version_string $VERSION_NUMBER
+   } else if $is_not_retro {
        let todos = (filter_todos $TODO_FILES $FILTER)
        # Filter by project and context
        let tn = (get_project_context_filter $todos $project $context)
@@ -29,6 +33,10 @@ export def td [
        let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
        $r
    }
+}
+
+export def version_string [$version] {
+    $version
 }
 
 export def get_list_filter [all, done] {
