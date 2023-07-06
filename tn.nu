@@ -3,6 +3,7 @@
 export def td [
     --all
     --done
+    --version
     --project(-p): string = ""
     --context(-c): string  = ""
     --retro(-r): string = ""
@@ -16,7 +17,10 @@ export def td [
     let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
     let FILTER = (get_list_filter $all $done)
 
-   if $is_not_retro {
+   if $version {
+       let version = "0.0.1"
+       $version
+   } else if $is_not_retro {
        let todos = (filter_todos $TODO_FILES $FILTER)
        # Filter by project and context
        let tn = (get_project_context_filter $todos $project $context)
@@ -119,12 +123,12 @@ export def get_glyth [key] {
 
     let glyths = ({ 
         " ": 😏
-        "x": ✅
-        "o": 😄
-        "waiting": ⏳
-        "team": 👥
-        "date": ⏰
-        "sprint": 🏃
+        "x": ☻
+        "o": 🤔
+        "waiting": ⏳ #  For future use
+        "team": 👥 #  For future use
+        "date": ⏰ #  For future use
+        "sprint": 🏃 #  For future use
     })
 
     ($glyths | get $key)
