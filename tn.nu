@@ -1,12 +1,12 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
 export def td [
-    --all
-    --done
-    --version
-    --project(-p): string = ""
-    --context(-c): string  = ""
-    --retro(-r): string = ""
+    --all # All todos
+    --done # Only done todos
+    --project(-p): string = "" # All todos within a +project
+    --context(-c): string  = "" # All todos within a @context
+    --retro(-r): string = "" # A retrospective for todos in git history
+    --version # Version of todo-nu
         ] {
 
    let is_not_retro = ($retro | is-empty)
@@ -18,7 +18,7 @@ export def td [
     let FILTER = (get_list_filter $all $done)
 
    if $version {
-       let version = "0.0.1"
+       let version = "0.0.2"
        $version
    } else if $is_not_retro {
        let todos = (filter_todos $TODO_FILES $FILTER)
