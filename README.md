@@ -56,7 +56,7 @@ But can be combined with `tn --done -r $date`
 # Configuration
 
 The script expects a `tn.toml` file similar to the one in this repo in `~/.config`
-Currently only with the path to the directory to parse.
+Give it the directory to search for and a list of directories to exclude.
 
 # TODO for Todo-nu
 

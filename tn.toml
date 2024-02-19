@@ -1,2 +1,3 @@
 path = "AbsolutPathToTheTodoFiles"
+exclude = ["file1", "file2"]
 

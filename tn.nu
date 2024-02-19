@@ -12,16 +12,19 @@ export def td [
    let is_not_retro = ($retro | is-empty)
 
     # The path to parse
-    let PATH = (open ~/.config/tn.toml)
-    let TODO_FILE_PATH = $PATH.path
-    let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
+    let CONFIG = (open ~/.config/tn.toml)
+    let TODO_FILE_PATH = $CONFIG.path
+    # let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
     let FILTER = (get_list_filter $all $done)
+    let EXCLUDEDIR = $CONFIG.exclude
 
    if $version {
-       let version = "0.0.2"
+       let version = "0.0.3"
        $version
    } else if $is_not_retro {
-       let todos = (filter_todos $TODO_FILES $FILTER)
+       let excludes = (generate_excludes_list $TODO_FILE_PATH $EXCLUDEDIR)
+       let todos = (filter_todos $TODO_FILE_PATH $FILTER $excludes)
+       # let filtered = (filter_excludes $todos $EXCLUDEDIR)
        # Filter by project and context
        let tn = (get_project_context_filter $todos $project $context)
        # Parse it to a table
@@ -60,9 +63,17 @@ export def get_list_filter [all, done] {
   }
 }
 
-export def filter_todos [list, regex] {
+export def filter_todos [path, regex, excludes] {
 
-    let out = (rg -tmd -n -e $regex $list)
+    let out = (rg -tmd -n -e $regex $excludes $path)
+    $out
+}
+
+def generate_excludes_list [path, excludes] {
+
+    let $excludes_list = ""
+    let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "\\*'"}) | str join " ")
+    # let $out = "-g '!{" + ($excludes | each {|ex| ($path | path join $ex + "\\*', ")} | str join "") + "}"
     $out
 }
 
@@ -101,7 +112,7 @@ export def get_retrospective [time path regex] {
     # So we should compare older commits to the current one and take some diff
     let revs = (run-external --redirect-stdout "git" "rev-list" "--all" $"--max-age=($time_rev)" 
                | lines | skip 1)
-    let r = (run-external --redirect-stdout "git" "grep" "-E" "-e" $regex $revs 
+    let r = (run-external --redirect-stdout "git" "grep" "-E" "-e" $regex ...$revs 
             | lines | parse '{rev}:{file}:{todo_retro}' | select todo_retro | uniq)
     $r
 }
@@ -123,7 +134,7 @@ export def get_glyth [key] {
 
     let glyths = ({ 
         " ": 😏
-        "x": ☻
+        "x": 😀
         "o": 🤔
         "waiting": ⏳ #  For future use
         "team": 👥 #  For future use
