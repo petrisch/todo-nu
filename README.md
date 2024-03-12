@@ -64,6 +64,8 @@ Give it the directory to search for and a list of directories to exclude.
 - [x] Take the project from the title of the last h1 upwards the file
 
 - [x] Give it some colors and emojis 🤡  
+- [ ] Make searchpaths a list
+- [ ] Give the possibility to exclude subdirectories from search
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
 - [ ] Add a config for depth to show only unindented items per default
 - [ ] Group issues by files where they came from

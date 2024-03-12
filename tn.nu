@@ -38,7 +38,7 @@ export def td [
    }
 }
 
-export def get_list_filter [all, done] {
+export def get_list_filter [all: bool, done: bool] {
 
   if ($all and $done) {
      echo "you can't have --all and --done at the same time"
@@ -63,13 +63,13 @@ export def get_list_filter [all, done] {
   }
 }
 
-export def filter_todos [path, regex, excludes] {
+export def filter_todos [path: string, regex: string, excludes: string] {
 
     let out = (rg -tmd -n -e $regex $excludes $path)
     $out
 }
 
-def generate_excludes_list [path, excludes] {
+def generate_excludes_list [path: string, excludes: list<string>] {
 
     let $excludes_list = ""
     let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "\\*'"}) | str join " ")
@@ -78,7 +78,7 @@ def generate_excludes_list [path, excludes] {
 }
 
 # Get a List of all Work items filtered by +project and @context
-export def get_project_context_filter [all_workitems, project, context] {
+export def get_project_context_filter [all_workitems: string, project: string, context: string] {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
@@ -94,17 +94,18 @@ export def get_project_context_filter [all_workitems, project, context] {
   $context_list
 }
 
-export def parse_to_table [list] {
+# TODO, Its called a list, but IS a string. Can you see that?
+export def parse_to_table [list: string] {
    $list | lines| parse '{file}.md:{line}:{todo}] {item}' | move item --before file | move todo --before item
 }
 
-export def abs_path_2_file [list] {
+export def abs_path_2_file [list: list] {
     $list | update file {|row| $row.file | path basename}
 }
 
 # Get a retrospective list of all DONE things in git
 # - [ ] Get the regex into the retrospective as well
-export def get_retrospective [time path regex] {
+export def get_retrospective [time: string path: string regex: string] {
     cd $path
     let time_rev = (($time | into datetime | into int) / 1000000000)
     # In the end we skip one, because we dont want the current commit in this
@@ -119,13 +120,13 @@ export def get_retrospective [time path regex] {
 
 # Open the file of the line specified with an editor
 # Doesn't work yet, because the table is out of the scope. Maybe use a module for that.
-def otd [table, line_number] {
+def otd [table: string, line_number: string] {
     nvim ([$table.file.$line_number, ".md"] |str join)
     # nvim ([(td -c team).file.0, ".md"] |str join)  # This works on cli
 }
 
 # Replace the todo with some fancy stuff. The todo arrives like this "  - [x "
-export def replace_with_glyth [list] {
+export def replace_with_glyth [list: table] {
     let t = ($list | each {|td| update todo {get_glyth (($td.todo | into string | parse '{x}[{item}').item.0)}})
     $t
 }
