@@ -67,6 +67,7 @@ Give it the directory to search for and a list of directories to exclude.
 - [x] Give it some colors and emojis 🤡
 - [x] Give the possibility to exclude subdirectories from search TODO OS "Error 123" on windows
 - [x] Give back all projects or contexts like: tn --list -p
+- [x] Make a shuffle randomizer giving just one todo or context out if one is in dought 
 - [ ] Make searchpaths a list
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
 - [ ] Add a config for depth to show only unindented items per default

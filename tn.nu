@@ -7,6 +7,7 @@ export def td [
     --context(-c): string  = "" # All todos within a @context
     --retro(-r): string = "" # A retrospective for todos in git history
     --list(-l): string = "" # List all @contexts or +projects used.
+    --rand(-x) # Pick a random todo
     --version(-v) # Version of todo-nu
         ] {
 
@@ -14,33 +15,39 @@ export def td [
    echo $list
    let list_contexts = ($retro | is-empty)
 
-    # The path to parse
-    let CONFIG = (open ~/.config/tn.toml)
-    let TODO_FILE_PATH = $CONFIG.path
-    # let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
-    let FILTER = (get_list_filter $all $done)
-    let EXCLUDEDIR = $CONFIG.exclude
+   # The path to parse
+   let CONFIG = (open ~/.config/tn.toml)
+   let TODO_FILE_PATH = $CONFIG.path
+   # let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
+   let FILTER = (get_list_filter $all $done)
+   let EXCLUDEDIR = $CONFIG.exclude
 
      if $version {
          let version = "0.0.4"
          $version
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
-         $td
+         if $rand { randomize $td } else {$td}
       } else if $list_contexts {
            if $list == "@" {
              let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
              let l = list_contexts $td
-             $l
+             if $rand { randomize $l } else {$l}
           } else if $list == "+" {
              let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
              let l = list_projects $td
-             $l
+             if $rand { randomize $l } else {$l}
            } else {"Either specify "@" for contexts or "+" for projects"}
       } else {
          let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
-         $r
+         if $rand { randomize $r } else {$r}
       }
+}
+
+def randomize [to_randomize] {
+    let len = $to_randomize | length
+    let r = random int ..$len
+    $to_randomize | get $r
 }
 
 def generate_todos [todo_file_path: path,
@@ -65,7 +72,7 @@ def list_contexts [todos: table] {
     # Doesn't catch multiline code blocks containing this pattern inside.
     let contexts = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|@([^\s]+)' |
                     get capture1 | flatten}) | flatten
-    $contexts | uniq --count | compact | filter {|x| $x.value != ""}
+    $contexts | uniq --count | compact | filter {|x| $x.value != ""} | sort-by -r count
 }
 
 # Get a list of all +projects beeing used. Although a project should actually be a file.
@@ -76,7 +83,7 @@ def list_projects [todos: table] {
     # Doesn't catch multiline code blocks containing this pattern inside.
     let projects = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|\+([^\s]+)' |
                     get capture1 | flatten}) | flatten
-    $projects | uniq --count | compact | filter {|x| $x.value != ""}
+    let p = $projects | uniq --count | compact | filter {|x| $x.value != ""} | sort-by count
 }
 
 def get_list_filter [all: bool, done: bool] {
