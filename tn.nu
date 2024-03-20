@@ -1,15 +1,17 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
 export def td [
-    --all # All todos
-    --done # Only done todos
+    --all(-a) # All todos
+    --done(-d) # Only done todos
     --project(-p): string = "" # All todos within a +project
     --context(-c): string  = "" # All todos within a @context
     --retro(-r): string = "" # A retrospective for todos in git history
-    --version # Version of todo-nu
+    --list(-l) # List all @contexts used
+    --version(-v) # Version of todo-nu
         ] {
 
-   let is_not_retro = ($retro | is-empty)
+   let generate_todos = (($retro | is-empty) and ($list == false))
+   let list_contexts = ($retro | is-empty)
 
     # The path to parse
     let CONFIG = (open ~/.config/tn.toml)
@@ -18,27 +20,49 @@ export def td [
     let FILTER = (get_list_filter $all $done)
     let EXCLUDEDIR = $CONFIG.exclude
 
-   if $version {
-       let version = "0.0.3"
-       $version
-   } else if $is_not_retro {
-       let excludes = (generate_excludes_list $TODO_FILE_PATH $EXCLUDEDIR)
-       let todos = (filter_todos $TODO_FILE_PATH $FILTER $excludes)
-       # let filtered = (filter_excludes $todos $EXCLUDEDIR)
-       # Filter by project and context
-       let tn = (get_project_context_filter $todos $project $context)
-       # Parse it to a table
-       let table = (parse_to_table $tn)
-       let t_abs_path = (abs_path_2_file $table)
-       let t_glyth = (replace_with_glyth $t_abs_path)
-       $t_glyth
-   } else {
-       let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
-       $r
-   }
+     if $version {
+         let version = "0.0.3"
+         $version
+      } else if $generate_todos {
+         let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+         $td
+      } else if $list_contexts {
+         let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+         let l = list_contexts $td
+         $l
+      } else {
+         let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
+         $r
+      }
 }
 
-export def get_list_filter [all: bool, done: bool] {
+def generate_todos [todo_file_path: path,
+                    excludedir: list,
+                    filter: string,
+                    project: string,
+                    context: string] {
+         let excludes = (generate_excludes_list $todo_file_path $excludedir)
+         let todos = (filter_todos $todo_file_path $filter $excludes)
+         # let filtered = (filter_excludes $todos $EXCLUDEDIR)
+         # Filter by project and context
+         let tn = (get_project_context_filter $todos $project $context)
+         # Parse it to a table
+         let table = (parse_to_table $tn)
+         let t_abs_path = (abs_path_2_file $table)
+         let t_glyth = (replace_with_glyth $t_abs_path)
+         $t_glyth
+}
+
+# Get a list of all @contexts beeing used 
+def list_contexts [todos: table] {
+    # Get all strings with the pattern "@something", but not if its a code in backticks
+    # Doesn't catch multiline code blocks containing this pattern inside.
+    let contexts = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|@([^\s]+)' |
+                    get capture1 | flatten}) | flatten
+    $contexts | uniq --count | compact | filter {|x| $x.value != ""}
+}
+
+def get_list_filter [all: bool, done: bool] {
 
   if ($all and $done) {
      echo "you can't have --all and --done at the same time"
@@ -63,22 +87,23 @@ export def get_list_filter [all: bool, done: bool] {
   }
 }
 
-export def filter_todos [path: string, regex: string, excludes: string] {
+def filter_todos [path: string, regex: string, excludes: string] {
 
-    let out = (rg -tmd -n -e $regex $excludes $path)
+    let out = (rg -tmd -n -e $regex $excludes $path --no-follow)
     $out
 }
 
 def generate_excludes_list [path: string, excludes: list<string>] {
 
     let $excludes_list = ""
-    let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "\\*'"}) | str join " ")
+    # let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "\\*'"}) | str join " ")
+    let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "'"}) | str join " ")
     # let $out = "-g '!{" + ($excludes | each {|ex| ($path | path join $ex + "\\*', ")} | str join "") + "}"
     $out
 }
 
 # Get a List of all Work items filtered by +project and @context
-export def get_project_context_filter [all_workitems: string, project: string, context: string] {
+def get_project_context_filter [all_workitems: string, project: string, context: string] {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
@@ -95,17 +120,17 @@ export def get_project_context_filter [all_workitems: string, project: string, c
 }
 
 # TODO, Its called a list, but IS a string. Can you see that?
-export def parse_to_table [list: string] {
+def parse_to_table [list: string] {
    $list | lines| parse '{file}.md:{line}:{todo}] {item}' | move item --before file | move todo --before item
 }
 
-export def abs_path_2_file [list: list] {
+def abs_path_2_file [list: list] {
     $list | update file {|row| $row.file | path basename}
 }
 
 # Get a retrospective list of all DONE things in git
 # - [ ] Get the regex into the retrospective as well
-export def get_retrospective [time: string path: string regex: string] {
+def get_retrospective [time: string path: string regex: string] {
     cd $path
     let time_rev = (($time | into datetime | into int) / 1000000000)
     # In the end we skip one, because we dont want the current commit in this
@@ -126,12 +151,12 @@ def otd [table: string, line_number: string] {
 }
 
 # Replace the todo with some fancy stuff. The todo arrives like this "  - [x "
-export def replace_with_glyth [list: table] {
+def replace_with_glyth [list: table] {
     let t = ($list | each {|td| update todo {get_glyth (($td.todo | into string | parse '{x}[{item}').item.0)}})
     $t
 }
 
-export def get_glyth [key] {
+def get_glyth [key] {
 
     let glyths = ({ 
         " ": 😏

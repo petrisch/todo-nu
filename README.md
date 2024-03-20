@@ -38,6 +38,7 @@ tn --done => all done issues
 tn -p CAD => only open issues from Project CAD
 tn --done -c team => only done issues from context team
 tn -p CAD -c team => Combinations allowed
+tn -l => List all @contexts
 ```
 Project and context can be multiple like -p BIM -p CAD
 
@@ -65,7 +66,7 @@ Give it the directory to search for and a list of directories to exclude.
 
 - [x] Give it some colors and emojis 🤡  
 - [ ] Make searchpaths a list
-- [ ] Give the possibility to exclude subdirectories from search
+- [x] Give the possibility to exclude subdirectories from search TODO OS "Error 123" on windows
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
 - [ ] Add a config for depth to show only unindented items per default
 - [ ] Group issues by files where they came from
