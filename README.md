@@ -38,7 +38,7 @@ tn --done => all done issues
 tn -p CAD => only open issues from Project CAD
 tn --done -c team => only done issues from context team
 tn -p CAD -c team => Combinations allowed
-tn -l => List all @contexts
+tn -l @ => List all @contexts or "+" for projects
 ```
 Project and context can be multiple like -p BIM -p CAD
 
@@ -64,9 +64,10 @@ Give it the directory to search for and a list of directories to exclude.
 - [x] Support - [o] for half done indented lists
 - [x] Take the project from the title of the last h1 upwards the file
 
-- [x] Give it some colors and emojis 🤡  
-- [ ] Make searchpaths a list
+- [x] Give it some colors and emojis 🤡
 - [x] Give the possibility to exclude subdirectories from search TODO OS "Error 123" on windows
+- [x] Give back all projects or contexts like: tn --list -p
+- [ ] Make searchpaths a list
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
 - [ ] Add a config for depth to show only unindented items per default
 - [ ] Group issues by files where they came from
@@ -75,7 +76,6 @@ Give it the directory to search for and a list of directories to exclude.
       the file. Then +project should give a combination of the two,
       or could even be used for something else.
 
-- [ ] Give back all projects or contexts like: tn --list -p
 - [ ] Make a filter for @maybes or configurable words.
 - [ ] Create a Link directly to the file and open it in $EDITOR
       see otn function, after that

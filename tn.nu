@@ -6,11 +6,12 @@ export def td [
     --project(-p): string = "" # All todos within a +project
     --context(-c): string  = "" # All todos within a @context
     --retro(-r): string = "" # A retrospective for todos in git history
-    --list(-l) # List all @contexts used
+    --list(-l): string = "" # List all @contexts or +projects used.
     --version(-v) # Version of todo-nu
         ] {
 
-   let generate_todos = (($retro | is-empty) and ($list == false))
+   let generate_todos = (($retro | is-empty) and ($list | is-empty))
+   echo $list
    let list_contexts = ($retro | is-empty)
 
     # The path to parse
@@ -21,15 +22,21 @@ export def td [
     let EXCLUDEDIR = $CONFIG.exclude
 
      if $version {
-         let version = "0.0.3"
+         let version = "0.0.4"
          $version
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
          $td
       } else if $list_contexts {
-         let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
-         let l = list_contexts $td
-         $l
+           if $list == "@" {
+             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+             let l = list_contexts $td
+             $l
+          } else if $list == "+" {
+             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+             let l = list_projects $td
+             $l
+           } else {"Either specify "@" for contexts or "+" for projects"}
       } else {
          let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
          $r
@@ -43,7 +50,6 @@ def generate_todos [todo_file_path: path,
                     context: string] {
          let excludes = (generate_excludes_list $todo_file_path $excludedir)
          let todos = (filter_todos $todo_file_path $filter $excludes)
-         # let filtered = (filter_excludes $todos $EXCLUDEDIR)
          # Filter by project and context
          let tn = (get_project_context_filter $todos $project $context)
          # Parse it to a table
@@ -60,6 +66,17 @@ def list_contexts [todos: table] {
     let contexts = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|@([^\s]+)' |
                     get capture1 | flatten}) | flatten
     $contexts | uniq --count | compact | filter {|x| $x.value != ""}
+}
+
+# Get a list of all +projects beeing used. Although a project should actually be a file.
+# One approach could be to count both the appearences of "+" and the same word as filename
+#Not of much need for now.
+def list_projects [todos: table] {
+    # Get all strings with the pattern "+something", but not if its a code in backticks
+    # Doesn't catch multiline code blocks containing this pattern inside.
+    let projects = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|\+([^\s]+)' |
+                    get capture1 | flatten}) | flatten
+    $projects | uniq --count | compact | filter {|x| $x.value != ""}
 }
 
 def get_list_filter [all: bool, done: bool] {
