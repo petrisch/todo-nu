@@ -5,6 +5,7 @@ export def td [
     --done(-d) # Only done todos
     --project(-p): string = "" # All todos within a +project
     --context(-c): string  = "" # All todos within a @context
+    --exclude(-e): string = "" # Exclude contexts like @maybe
     --retro(-r): string = "" # A retrospective for todos in git history
     --list(-l): string = "" # List all @contexts or +projects used.
     --rand(-x) # Pick a random todo
@@ -12,22 +13,21 @@ export def td [
         ] {
 
    let generate_todos = (($retro | is-empty) and ($list | is-empty))
-   echo $list
    let list_contexts = ($retro | is-empty)
 
    # The path to parse
    let CONFIG = (open ~/.config/tn.toml)
    let TODO_FILE_PATH = $CONFIG.path
-   # let TODO_FILES = ($TODO_FILE_PATH + "/**/*.md")
    let FILTER = (get_list_filter $all $done)
    let EXCLUDEDIR = $CONFIG.exclude
 
      if $version {
-         let version = "0.0.4"
+         let version = "0.0.5"
          $version
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
-         if $rand { randomize $td } else {$td}
+         let td_filtered = filter_excluded_contexts $exclude $td
+         if $rand { randomize $td_filtered } else {$td_filtered}
       } else if $list_contexts {
            if $list == "@" {
              let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
@@ -64,6 +64,15 @@ def generate_todos [todo_file_path: path,
          let t_abs_path = (abs_path_2_file $table)
          let t_glyth = (replace_with_glyth $t_abs_path)
          $t_glyth
+}
+
+# Filter a table by the exclude word, it one is given, treated as a context
+def filter_excluded_contexts [exclude: string todos: table] {
+    if ($exclude | is-empty) {
+        $todos
+    } else {
+        $todos | where {|x| not ($x.item | str contains $"@($exclude)")}
+    }
 }
 
 # Get a list of all @contexts beeing used 
@@ -111,22 +120,22 @@ def get_list_filter [all: bool, done: bool] {
   }
 }
 
+# Uses ripgrep to filter all todos from regular text
 def filter_todos [path: string, regex: string, excludes: string] {
 
     let out = (rg -tmd -n -e $regex $excludes $path --no-follow)
     $out
 }
 
+# Generates a string for ripgrep that excludes paths
 def generate_excludes_list [path: string, excludes: list<string>] {
 
     let $excludes_list = ""
-    # let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "\\*'"}) | str join " ")
     let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "'"}) | str join " ")
-    # let $out = "-g '!{" + ($excludes | each {|ex| ($path | path join $ex + "\\*', ")} | str join "") + "}"
     $out
 }
 
-# Get a List of all Work items filtered by +project and @context
+# Get a List of all work items filtered by +project and @context
 def get_project_context_filter [all_workitems: string, project: string, context: string] {
 
   # Filter them by project or let the project_list be the list if there is no project given

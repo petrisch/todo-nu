@@ -68,6 +68,7 @@ Give it the directory to search for and a list of directories to exclude.
 - [x] Give the possibility to exclude subdirectories from search TODO OS "Error 123" on windows
 - [x] Give back all projects or contexts like: tn --list -p
 - [x] Make a shuffle randomizer giving just one todo or context out if one is in dought 
+- [x] Make a filter for @maybes or configurable words.
 - [ ] Make searchpaths a list
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
 - [ ] Add a config for depth to show only unindented items per default
@@ -77,7 +78,6 @@ Give it the directory to search for and a list of directories to exclude.
       the file. Then +project should give a combination of the two,
       or could even be used for something else.
 
-- [ ] Make a filter for @maybes or configurable words.
 - [ ] Create a Link directly to the file and open it in $EDITOR
       see otn function, after that
 - [ ] nvim +call cursor(<LINE>, <COLUMN>) for calling it directly on the line
