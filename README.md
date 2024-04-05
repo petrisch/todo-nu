@@ -69,9 +69,12 @@ Give it the directory to search for and a list of directories to exclude.
 - [x] Give back all projects or contexts like: tn --list -p
 - [x] Make a shuffle randomizer giving just one todo or context out if one is in dought 
 - [x] Make a filter for @maybes or configurable words.
-- [ ] Make searchpaths a list
+- [ ] Unify context, projet and exclude filters
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
+- [ ] Make searchpaths a list
 - [ ] Add a config for depth to show only unindented items per default
+- [ ] Get the context and project filters into the retrospective
+- [ ] Get the list feature into the retrospective as well
 - [ ] Group issues by files where they came from
       Not shure where this is going. In Zettelkasten flat hierarchy style wiki,
       every topic should have its own file. So +project should be the title of 
