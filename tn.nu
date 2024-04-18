@@ -9,6 +9,7 @@ export def td [
     --retro(-r): string = "" # A retrospective for todos in git history
     --list(-l): string = "" # List all @contexts or +projects used.
     --rand(-x) # Pick a random todo
+    --blame(-b) # include git blame in the output table
     --version(-v) # Version of todo-nu
         ] {
 
@@ -27,7 +28,12 @@ export def td [
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
          let td_filtered = filter_excluded_contexts $exclude $td
-         if $rand { randomize $td_filtered } else {$td_filtered}
+         if $blame { 
+             let td_blamed_filtered = add_blame_info $td_filtered $TODO_FILE_PATH
+             if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
+         } else { 
+             if $rand { randomize $td_filtered } else {$td_filtered}
+         }
       } else if $list_contexts {
            if $list == "@" {
              let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
@@ -159,6 +165,17 @@ def parse_to_table [todos_string: string] {
 
 def abs_path_2_file [list: list] {
     $list | update file {|row| $row.file | path basename}
+}
+
+# Get the git blame for the last time a todo has been touched
+def add_blame_info [todo: list path: string] {
+    cd $path
+    print $env.PWD
+    let todo_blame = ($todo | insert blame blame)
+    $todo_blame | par-each {|x| 
+      update blame (run-external "git" "blame" "-L" ($x.line | append ["," $x.line] |
+      str join "") ($x.file | append ".md" | str join "") |
+        parse "{commit} ({author} {date} {time}" | get date.0?)}
 }
 
 # Get a retrospective list of all DONE things in git
