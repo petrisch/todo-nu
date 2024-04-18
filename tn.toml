@@ -1,3 +1,4 @@
 path = "AbsolutPathToTheTodoFiles"
 exclude = ["dir1", "dir2"]
+logfile = "AbsolutPathToTheLogFiles"
 

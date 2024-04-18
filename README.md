@@ -86,11 +86,14 @@ This helps when doing reviews to find stuff that needs more love.
 ```
 td -b
 ```
+Only works for files directly in path, not in subdirectories.
 
 ## Configuration
 
 The script expects a `tn.toml` file similar to the one in this repo in `~/.config`
 Give it the directory to search for and a list of directories to exclude.
+The logfile is mainly used to supress errors from git and ripgrep and is not properly handled,
+but not optional.
 
 ## TODO for Todo-nu
 

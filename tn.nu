@@ -1,5 +1,7 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
+use std
+
 export def td [
     --all(-a) # All todos
     --done(-d) # Only done todos
@@ -21,26 +23,27 @@ export def td [
    let TODO_FILE_PATH = $CONFIG.path
    let FILTER = (get_list_filter $all $done)
    let EXCLUDEDIR = $CONFIG.exclude
+   let LOGFILE = $CONFIG.logfile
 
      if $version {
-         let version = "0.0.5"
+         let version = "0.0.6"
          $version
       } else if $generate_todos {
-         let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+         let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
          let td_filtered = filter_excluded_contexts $exclude $td
          if $blame { 
-             let td_blamed_filtered = add_blame_info $td_filtered $TODO_FILE_PATH
+             let td_blamed_filtered = add_blame_info $td_filtered $TODO_FILE_PATH $LOGFILE
              if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
          } else { 
              if $rand { randomize $td_filtered } else {$td_filtered}
          }
       } else if $list_contexts {
            if $list == "@" {
-             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
              let l = list_contexts $td
              if $rand { randomize $l } else {$l}
           } else if $list == "+" {
-             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context
+             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
              let l = list_projects $td
              if $rand { randomize $l } else {$l}
            } else {"Either specify "@" for contexts or "+" for projects"}
@@ -60,11 +63,12 @@ def generate_todos [todo_file_path: path,
                     excludedir: list,
                     filter: string,
                     project: string,
-                    context: string] nothing -> table {
+                    context: string
+                    log: string] nothing -> table {
          let excludes = (generate_excludes_list $todo_file_path $excludedir)
-         let todos = (filter_todos $todo_file_path $filter $excludes)
+         let todos = (filter_todos $todo_file_path $filter $excludes $log)
          # Filter by project and context
-         let tn = (get_project_context_filter $todos $project $context)
+         let tn = (get_project_context_filter $todos $project $context $log)
          # Parse it to a table
          let table = (parse_to_table $tn)
          let t_abs_path = (abs_path_2_file $table)
@@ -127,9 +131,9 @@ def get_list_filter [all: bool, done: bool] nothing -> string {
 }
 
 # Uses ripgrep to filter all todos from regular text
-def filter_todos [path: string, regex: string, excludes: string] nothing -> string {
+def filter_todos [path: string, regex: string, excludes: string, log: string] nothing -> string {
 
-    let out = (rg -tmd -n -e $regex $excludes $path --no-follow)
+    let out = (rg -tmd -n -e $regex $excludes $path --no-follow err> $log)
     $out
 }
 
@@ -142,16 +146,16 @@ def generate_excludes_list [path: string, excludes: list<string>] nothing -> str
 }
 
 # Get a List of all work items filtered by +project and @context
-def get_project_context_filter [all_workitems: string, project: string, context: string] nothing -> string {
+def get_project_context_filter [all_workitems: string, project: string, context: string, log: string] nothing -> string {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
-      $all_workitems | rg -w $"\\+($project)"
+      $all_workitems | rg -w $"\\+($project err> $log)"
   } else { $all_workitems })
 
   # Filter above filter by context or let the context_filter be the project_list if there is no context given
   let context_list = (if (($context | str length) > 2 ) {
-      $project_list | rg -w $"@($context)"
+      $project_list | rg -w $"@($context err> $log)"
   } else { $project_list })
 
   # Print it out
@@ -168,18 +172,17 @@ def abs_path_2_file [list: list] {
 }
 
 # Get the git blame for the last time a todo has been touched
-def add_blame_info [todo: list path: string] {
+def add_blame_info [todo: list, path: string, log: string] {
     cd $path
-    print $env.PWD
     let todo_blame = ($todo | insert blame blame)
     $todo_blame | par-each {|x| 
-      update blame (run-external "git" "blame" "-L" ($x.line | append ["," $x.line] |
-      str join "") ($x.file | append ".md" | str join "") |
-        parse "{commit} ({author} {date} {time}" | get date.0?)}
+      update blame (git blame -L ($x.line | append ["," $x.line] |
+      str join "") ($x.file | append ".md" | str join "") err> $log |
+        parse "{commit} {author} {date} {time}" | get date.0? )}
 }
 
 # Get a retrospective list of all DONE things in git
-def get_retrospective [time: string path: string regex: string] {
+def get_retrospective [time: string, path: string, regex: string] {
     cd $path
     let time_rev = (($time | into datetime | into int) / 1000000000)
     # In the end we skip one, because we dont want the current commit in this
