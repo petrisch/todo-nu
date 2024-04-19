@@ -103,6 +103,7 @@ but not optional.
 - [x] Make a shuffle randomizer giving just one todo or context out if one is in dought 
 - [x] Make a filter for @maybes or configurable words.
 - [x] Add a git blame column option to display the last date a todo has been updated
+- [x] Support - [o] for half done indented lists and make them optional
 - [ ] Unify context, project and exclude filters
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html 
 - [ ] Make searchpath a list for multiple todo sources
@@ -112,7 +113,6 @@ but not optional.
       like: nvim +call cursor(<LINE>, <COLUMN>) for calling it directly on the line
 - [ ] Or make a nvim plugin, that gets the todos into a telescope fzf list
 - [ ] Due dates functionality @maybe
-- [ ] Support - [o] for half done indented lists
 - [ ] Add a config for depth to show only unindented items per default
 
 Priority should be the rank within the file,

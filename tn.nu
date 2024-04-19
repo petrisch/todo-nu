@@ -1,7 +1,5 @@
 # Nuscript to filter all Todos from a Markdown Wiki
 
-use std
-
 export def td [
     --all(-a) # All todos
     --done(-d) # Only done todos
@@ -21,7 +19,8 @@ export def td [
    # The path to parse
    let CONFIG = (open ~/.config/tn.toml)
    let TODO_FILE_PATH = $CONFIG.path
-   let FILTER = (get_list_filter $all $done)
+   let PARTIAL = $CONFIG.partial
+   let FILTER = (get_list_filter $all $done $PARTIAL)
    let EXCLUDEDIR = $CONFIG.exclude
    let LOGFILE = $CONFIG.logfile
 
@@ -46,7 +45,7 @@ export def td [
              let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
              let l = list_projects $td
              if $rand { randomize $l } else {$l}
-           } else {"Either specify "@" for contexts or "+" for projects"}
+           } else { "Either specify '@' for contexts or '+' for projects" }
       } else {
          let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
          if $rand { randomize $r } else {$r}
@@ -63,7 +62,7 @@ def generate_todos [todo_file_path: path,
                     excludedir: list,
                     filter: string,
                     project: string,
-                    context: string
+                    context: string,
                     log: string] nothing -> table {
          let excludes = (generate_excludes_list $todo_file_path $excludedir)
          let todos = (filter_todos $todo_file_path $filter $excludes $log)
@@ -76,12 +75,12 @@ def generate_todos [todo_file_path: path,
          $t_glyth
 }
 
-# Filter a table by the exclude word, it one is given, treated as a context
+# Filter a table by the exclude word, if one is given, treated as a context
 def filter_excluded_contexts [exclude: string todos: table] nothing -> table {
     if ($exclude | is-empty) {
         $todos
     } else {
-        $todos | where {|x| not ($x.item | str contains $"@($exclude)")}
+        $todos | where ({|x| not ($x.item | str contains $"@($exclude)")})
     }
 }
 
@@ -105,29 +104,33 @@ def list_projects [todos: table] nothing -> table {
     $projects | uniq --count | compact | filter {|x| $x.value != ""} | sort-by count
 }
 
-def get_list_filter [all: bool, done: bool] nothing -> string {
+def get_list_filter [all: bool, done: bool, partial: bool] nothing -> string {
 
   if ($all and $done) {
-     echo "you can't have --all and --done at the same time"
+     print ("You can't have --all and --done at the same time")
      exit
    }
 
-   let open_str = '(- \[ \])'
-   let done_str = '(- \[x\])'
-   let partly_str = '(- \[o\])'
+   mut regTable = { open: {regex: '(- \[ \])'
+                           enabled: true}
+                    done: {regex: '(- \[x\])'
+                           enabled: true}
+                    partly: {regex: '(- \[o\])'
+                           enabled: true} }
 
   if $all {
-     let regex = ($open_str + '|' + $done_str + '|' + $partly_str)
-     $regex
-
+     $regTable
   } else if $done {
-     let regex = ($done_str + '|' + $partly_str)
-     $regex
-
+     $regTable.open.enabled = false
+     $regTable.partly.enabled = false
   } else {
-     let regex = $open_str
-     $regex
+     if $partial == false { $regTable.partly.enabled = false }
+     $regTable.done.enabled = false
   }
+
+  let regex = ($regTable | transpose name value | get value |
+               each {|v| if $v.enabled { [] | append $v.regex }} | flatten )
+  $regex | str join "|"
 }
 
 # Uses ripgrep to filter all todos from regular text
@@ -158,7 +161,6 @@ def get_project_context_filter [all_workitems: string, project: string, context:
       $project_list | rg -w $"@($context err> $log)"
   } else { $project_list })
 
-  # Print it out
   $context_list
 }
 
@@ -222,16 +224,3 @@ def get_glyth [key] {
 
     ($glyths | get $key)
 }
-
-# def parse_depth [depth] {
-    
-# }
-
-# export identify_todo [text] {
-    
-#    let indent = "    "
-#    let mark_pattern = {partly: 'o', done: 'x', open: ' '}
-#    let tasks = {task: "- \[$mark_pattern\]", subtask: "$indent- \[$mark_pattern\]"}
-
-#    match $text {$task.task}, _ => { 'no valid todo, wrong parse' }
-# }

@@ -1,4 +1,9 @@
+# The absolut path to where the .md files are stored
 path = "AbsolutPathToTheTodoFiles"
+# The subdirectories in this path to not include
 exclude = ["dir1", "dir2"]
+# The logfile where errors are reported
 logfile = "AbsolutPathToTheLogFiles"
+#Whether to include partially finished todos when only seeing the default open todos
+partial = false
 
