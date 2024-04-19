@@ -25,7 +25,7 @@ export def td [
    let LOGFILE = $CONFIG.logfile
 
      if $version {
-         let version = "0.0.6"
+         let version = "0.0.7"
          $version
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
@@ -80,7 +80,7 @@ def filter_excluded_contexts [exclude: string todos: table] nothing -> table {
     if ($exclude | is-empty) {
         $todos
     } else {
-        $todos | where ({|x| not ($x.item | str contains $"@($exclude)")})
+        $todos | where {|x| not ($x.item | str contains $"@($exclude)")}
     }
 }
 
