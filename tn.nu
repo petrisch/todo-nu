@@ -10,6 +10,7 @@ export def td [
     --list(-l): string = "" # List all @contexts or +projects used.
     --rand(-x) # Pick a random todo
     --blame(-b) # include git blame in the output table
+    --json(-j) # Output result as json
     --version(-v) # Version of todo-nu
         ] {
 
@@ -34,7 +35,7 @@ export def td [
              let td_blamed_filtered = add_blame_info $td_filtered $TODO_FILE_PATH $LOGFILE
              if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
          } else { 
-             if $rand { randomize $td_filtered } else {$td_filtered}
+             if $rand { randomize $td_filtered } else if $json { $td_filtered | to json } else { $td_filtered }
          }
       } else if $list_contexts {
            if $list == "@" {
