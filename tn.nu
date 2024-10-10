@@ -26,7 +26,7 @@ export def td [
    let LOGFILE = $CONFIG.logfile
 
      if $version {
-         let version = "0.0.7"
+         let version = "0.0.8"
          $version
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
@@ -135,9 +135,10 @@ def get_list_filter [all: bool, done: bool, partial: bool] nothing -> string {
 }
 
 # Uses ripgrep to filter all todos from regular text
+# Excludes currently not working, see https://github.com/petrisch/todo-nu/issues/6
 def filter_todos [path: string, regex: string, excludes: string, log: string] nothing -> string {
 
-    let out = (rg -tmd -n -e $regex $excludes $path --no-follow err> $log)
+    let out = (rg -tmd -n -e $regex $path err> $log) # $excludes $path --no-follow err> $log)
     $out
 }
 
