@@ -27,6 +27,7 @@ This is some documentation
 - [ ] Advertise new version @maybe +todo-nu
 
 ```
+
 Todo-nu parses only the todo lines and lets you filter them.
 
 ## Usage
@@ -39,6 +40,7 @@ td -p todo-nu => only open issues marked with project +todo-nu
 td --done -c deployment => only done issues marked wirh context @deployment
 td -p todo-nu -c deployment => combinations allowed
 ```
+
 Even though -p works, its better to use projects by file,
 which then is equivalent to a `td | where file==<projectname>` pipeline
 
@@ -57,12 +59,13 @@ That doesn't mean, there is more todo, but it gives an idea about where more act
 ```
 td -l @ => List all @contexts or "+" for projects
 ```
+
 ### Random
 
 Gives a random todo for when you don't know what to pick up next.
 
 ```
-td -x 
+td -x
 td --all -x => Works also for lists or combined
 ```
 
@@ -71,6 +74,7 @@ td --all -x => Works also for lists or combined
 ```
 td -r 2021-01-01
 ```
+
 Gives all issues from the git history,
 that are not older than that date given.
 For now doesn't give back the latest commit,
@@ -86,6 +90,7 @@ This helps when doing reviews to find stuff that needs more love.
 ```
 td -b
 ```
+
 Only works for files directly in path, not in subdirectories.
 
 ## Configuration
@@ -104,8 +109,9 @@ but not optional.
 - [x] Make a filter for @maybes or configurable words.
 - [x] Add a git blame column option to display the last date a todo has been updated
 - [x] Support - [o] for half done indented lists and make them optional
+- [ ] Give a "works from nu version > on"
 - [ ] Unify context, project and exclude filters
-- [ ] Add some tests from http://www.nushell.sh/book/testing.html 
+- [ ] Add some tests from http://www.nushell.sh/book/testing.html
 - [ ] Make searchpath a list for multiple todo sources
 - [ ] Get the context and project filters into the retrospective
 - [ ] Get the list feature into the retrospective as well

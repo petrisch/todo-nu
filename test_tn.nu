@@ -1,8 +1,14 @@
-use std "assert"
-use std "assert equal"
-use std "assert skip"
+use std assert
+# use std "assert equal"
+# use std "assert skip"
 
-export def test_get_project_context_filter [] {
+#[test]
+def test_addition [] {
+    assert equal (1 + 2) 3
+}
+
+#[test]
+def test_get_project_context_filter [] {
 
     export use tn.nu *
 
@@ -18,6 +24,22 @@ export def test_get_project_context_filter [] {
     assert equal (get_project_context_filter $ALL_WORKITEMS 'projectx' 'contexty') [$ALL_WORKITEMS.3 $ALL_WORKITEMS.4]
 }
 
-export def test_skip [] {
-    assert skip
+#[test]
+def test_replace_with_glyth [] {
+    let todos = ['- [x', '- [ ]', '- [o]']
+    let expected = '[😀, 😏, 🤔]'
+    let return = (replace_with_glyth $todos)
+
+    std assert ($return == $expected) $"expected ($expected), got: ($return)"
+    # --error-label {
+    #     start: (metadata $todos).span.start,
+    #     end: (metadata $todos).span.end,
+    #     text: $"(todos) is not an even number",
+    #     }
+}
+
+#[test]
+#[ignore]
+def test_skip [] {
+   print 'dont'
 }
