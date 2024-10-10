@@ -26,7 +26,7 @@ export def td [
    let LOGFILE = $CONFIG.logfile
 
      if $version {
-         let version = "0.0.7"
+         let version = "0.0.8"
          $version
       } else if $generate_todos {
          let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
@@ -135,19 +135,20 @@ def get_list_filter [all: bool, done: bool, partial: bool] nothing -> string {
 }
 
 # Uses ripgrep to filter all todos from regular text
+# Excludes currently not working, see https://github.com/petrisch/todo-nu/issues/6
 def filter_todos [path: string, regex: string, excludes: string, log: string] nothing -> string {
 
-    let out = (rg -tmd -n -e $regex $excludes $path --no-follow err> $log)
+    let out = (rg -tmd -n -e $regex $path err> $log) # $excludes $path --no-follow err> $log)
     $out
 }
 
 # Generates a string for ripgrep that excludes paths
-def generate_excludes_list [path: string, excludes: list<string>] nothing -> string {
-
-    let $excludes_list = ""
-    let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "'"}) | str join " ")
-    $out
-}
+# def generate_excludes_list [path: string, excludes: list<string>] nothing -> string {
+#
+#     let $excludes_list = ""
+#     let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "'"}) | str join " ")
+#     $out
+# }
 
 # Get a List of all work items filtered by +project and @context
 def get_project_context_filter [all_workitems: string, project: string, context: string, log: string] nothing -> string {
