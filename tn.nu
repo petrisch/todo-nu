@@ -1,5 +1,14 @@
-# Nuscript to filter all Todos from a Markdown Wiki
+def load_config [] {
+  let CONFIG = (open ~/.config/tn.toml)
+  {
+    "TODO_FILE_PATH": $CONFIG.path,
+    "PARTIAL": $CONFIG.partial,
+    "EXCLUDEDIR": $CONFIG.exclude,
+    "LOGFILE": $CONFIG.logfile
+  }
+}
 
+# Nuscript to filter all Todos from a Markdown Wiki
 export def td [
     --all(-a) # All todos
     --done(-d) # Only done todos
@@ -14,41 +23,36 @@ export def td [
     --version(-v) # Version of todo-nu
         ] {
 
+  let config = (load_config)
+
    let generate_todos = (($retro | is-empty) and ($list | is-empty))
    let list_contexts = ($retro | is-empty)
-
-   # The path to parse
-   let CONFIG = (open ~/.config/tn.toml)
-   let TODO_FILE_PATH = $CONFIG.path
-   let PARTIAL = $CONFIG.partial
-   let FILTER = (get_list_filter $all $done $PARTIAL)
-   let EXCLUDEDIR = $CONFIG.exclude
-   let LOGFILE = $CONFIG.logfile
+   let filter = (get_list_filter $all $done $config.PARTIAL)
 
      if $version {
-         let version = "0.0.8"
+         let version = "0.0.9"
          $version
       } else if $generate_todos {
-         let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
+         let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
          let td_filtered = filter_excluded_contexts $exclude $td
          if $blame { 
-             let td_blamed_filtered = add_blame_info $td_filtered $TODO_FILE_PATH $LOGFILE
+             let td_blamed_filtered = add_blame_info $td_filtered $config.TODO_FILE_PATH $config.LOGFILE
              if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
          } else { 
              if $rand { randomize $td_filtered } else if $json { $td_filtered | to json } else { $td_filtered }
          }
       } else if $list_contexts {
            if $list == "@" {
-             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
+             let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
              let l = list_contexts $td
              if $rand { randomize $l } else {$l}
           } else if $list == "+" {
-             let td = generate_todos $TODO_FILE_PATH $EXCLUDEDIR $FILTER $project $context $LOGFILE
+             let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
              let l = list_projects $td
              if $rand { randomize $l } else {$l}
            } else { "Either specify '@' for contexts or '+' for projects" }
       } else {
-         let r = (get_retrospective $retro $TODO_FILE_PATH $FILTER)
+         let r = (get_retrospective $retro $config.TODO_FILE_PATH $filter)
          if $rand { randomize $r } else {$r}
       }
 }
@@ -59,12 +63,14 @@ def randomize [to_randomize] {
     $to_randomize | get $r
 }
 
-def generate_todos [todo_file_path: path,
+def generate_todos [
+                    todo_file_path: path,
                     excludedir: list,
                     filter: string,
                     project: string,
                     context: string,
-                    log: string] nothing -> table {
+                    log: string
+                  ]: nothing -> table {
          let excludes = (generate_excludes_list $todo_file_path $excludedir)
          let todos = (filter_todos $todo_file_path $filter $excludes $log)
          # Filter by project and context
@@ -77,7 +83,7 @@ def generate_todos [todo_file_path: path,
 }
 
 # Filter a table by the exclude word, if one is given, treated as a context
-def filter_excluded_contexts [exclude: string todos: table] nothing -> table {
+def filter_excluded_contexts [exclude: string todos: table]: nothing -> table {
     if ($exclude | is-empty) {
         $todos
     } else {
@@ -86,7 +92,7 @@ def filter_excluded_contexts [exclude: string todos: table] nothing -> table {
 }
 
 # Get a list of all @contexts beeing used 
-def list_contexts [todos: table] nothing -> table {
+def list_contexts [todos: table]: nothing -> table {
     # Get all strings with the pattern "@something", but not if its a code in backticks
     # Doesn't catch multiline code blocks containing this pattern inside.
     let contexts = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|@([^\s]+)' |
@@ -97,7 +103,7 @@ def list_contexts [todos: table] nothing -> table {
 # Get a list of all +projects beeing used. Although a project should actually be a file.
 # One approach could be to count both the appearences of "+" and the same word as filename
 #Not of much need for now.
-def list_projects [todos: table] nothing -> table {
+def list_projects [todos: table]: nothing -> table {
     # Get all strings with the pattern "+something", but not if its a code in backticks
     # Doesn't catch multiline code blocks containing this pattern inside.
     let projects = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|\+([^\s]+)' |
@@ -105,7 +111,8 @@ def list_projects [todos: table] nothing -> table {
     $projects | uniq --count | compact | filter {|x| $x.value != ""} | sort-by count
 }
 
-def get_list_filter [all: bool, done: bool, partial: bool] nothing -> string {
+# Creates a filter string that can be used in rg later
+def get_list_filter [all: bool, done: bool, partial: bool]: nothing -> string {
 
   if ($all and $done) {
      print ("You can't have --all and --done at the same time")
@@ -136,14 +143,14 @@ def get_list_filter [all: bool, done: bool, partial: bool] nothing -> string {
 
 # Uses ripgrep to filter all todos from regular text
 # Excludes currently not working, see https://github.com/petrisch/todo-nu/issues/6
-def filter_todos [path: string, regex: string, excludes: string, log: string] nothing -> string {
+def filter_todos [path: string, regex: string, excludes: string, log: string]: nothing -> string {
 
     let out = (rg -tmd -n -e $regex $path err> $log) # $excludes $path --no-follow err> $log)
     $out
 }
 
 # Generates a string for ripgrep that excludes paths
-def generate_excludes_list [path: string, excludes: list<string>] nothing -> string {
+def generate_excludes_list [path: string, excludes: list<string>]: nothing -> string {
 
     let $excludes_list = ""
     let $out = ($excludes_list | append ($excludes | each {|ex| "-g '!" + ($path | path join $ex) + "'"}) | str join " ")
@@ -151,7 +158,7 @@ def generate_excludes_list [path: string, excludes: list<string>] nothing -> str
 }
 
 # Get a List of all work items filtered by +project and @context
-def get_project_context_filter [all_workitems: string, project: string, context: string, log: string] nothing -> string {
+def get_project_context_filter [all_workitems: string, project: string, context: string, log: string]: nothing -> string {
 
   # Filter them by project or let the project_list be the list if there is no project given
   let project_list = (if (($project | str length) > 2 ) {
@@ -199,11 +206,17 @@ def get_retrospective [time: string, path: string, regex: string] {
     $r
 }
 
-# Open the file of the line specified with an editor
-# Doesn't work yet, because the table is out of the scope. Maybe use a module for that.
-def otd [table: string, line_number: string] {
-    nvim ([$table.file.$line_number, ".md"] |str join)
-    # nvim ([(td -c team).file.0, ".md"] |str join)  # This works on cli
+# Open the file of the line specified with an editor.
+# It works, but the table td produces is not persistent, so there is no workflow like
+# looking up todos and then open the line in the editor.
+export def otd [table: table, item_number: int] {
+  let config = (load_config)
+  let item = ($table | get $item_number)
+  try {
+    run-external ($env.EDITOR) ([($config.TODO_FILE_PATH), "/", ($item.file), ".md"] | str join) "-c" ($item.line)
+  } catch { 
+    print $"Couldn't parse table to open in ($env.EDITOR)"
+  }
 }
 
 # Replace the todo with some fancy stuff. The todo arrives like this "  - [x "
