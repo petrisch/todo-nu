@@ -117,12 +117,12 @@ but not optional.
 - [x] Support - [o] for half done indented lists and make them optional
 - [x] Give a "works from nu version > on"
 - [x] Or make a nvim plugin, that gets the todos into a telescope fzf list
+- [x] Create a Link directly to the file and open it in $EDITOR
 - [ ] Unify context, project and exclude filters
 - [ ] Add some tests from http://www.nushell.sh/book/testing.html
 - [ ] Make searchpath a list for multiple todo sources
 - [ ] Get the context and project filters into the retrospective
 - [ ] Get the list feature into the retrospective as well
-- [ ] Create a Link directly to the file and open it in $EDITOR
       like: nvim +call cursor(<LINE>, <COLUMN>) for calling it directly on the line
 - [ ] Due dates functionality @maybe
 - [ ] Add a config for depth to show only unindented items per default

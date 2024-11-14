@@ -30,11 +30,11 @@ export def td [
    let filter = (get_list_filter $all $done $config.PARTIAL)
 
      if $version {
-         let version = "0.0.9"
+         let version = "0.1.0"
          $version
       } else if $generate_todos {
          let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
-         let td_filtered = filter_excluded_contexts $exclude $td
+         let td_filtered = (filter_excluded_contexts $exclude $td | sort-by -i file)
          if $blame { 
              let td_blamed_filtered = add_blame_info $td_filtered $config.TODO_FILE_PATH $config.LOGFILE
              if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
@@ -207,8 +207,6 @@ def get_retrospective [time: string, path: string, regex: string] {
 }
 
 # Open the file of the line specified with an editor.
-# It works, but the table td produces is not persistent, so there is no workflow like
-# looking up todos and then open the line in the editor.
 export def otd [table: table, item_number: int] {
   let config = (load_config)
   let item = ($table | get $item_number)
