@@ -7,7 +7,8 @@ Yet another Todo script which:
 - Tries to be as simple as possible
 - Works for me approach
 
-Nushell is under heavy development. It works in 0.99.1, but it used to work for older versions as well.
+Nushell is under heavy development.
+The current version works with v0.150. for older versions check older commits.
 
 ## Inspiration
 

@@ -35,10 +35,10 @@ export def td [
       } else if $generate_todos {
          let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
          let td_filtered = (filter_excluded_contexts $exclude $td | sort-by -i file)
-         if $blame { 
+         if $blame {
              let td_blamed_filtered = add_blame_info $td_filtered $config.TODO_FILE_PATH $config.LOGFILE
              if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
-         } else { 
+         } else {
              if $rand { randomize $td_filtered } else if $json { $td_filtered | to json } else { $td_filtered }
          }
       } else if $list_contexts {
@@ -91,13 +91,13 @@ def filter_excluded_contexts [exclude: string todos: table]: nothing -> table {
     }
 }
 
-# Get a list of all @contexts beeing used 
+# Get a list of all @contexts beeing used
 def list_contexts [todos: table]: nothing -> table {
     # Get all strings with the pattern "@something", but not if its a code in backticks
     # Doesn't catch multiline code blocks containing this pattern inside.
     let contexts = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|@([^\s]+)' |
                     get capture1 | flatten}) | flatten
-    $contexts | uniq --count | compact | filter {|x| $x.value != ""} | sort-by -r count
+    $contexts | uniq --count | compact | where {|x| $x.value != ""} | sort-by -r count
 }
 
 # Get a list of all +projects beeing used. Although a project should actually be a file.
@@ -108,7 +108,7 @@ def list_projects [todos: table]: nothing -> table {
     # Doesn't catch multiline code blocks containing this pattern inside.
     let projects = ($todos | get item | each {|e| parse --regex '(`[^`]*`)|\+([^\s]+)' |
                     get capture1 | flatten}) | flatten
-    $projects | uniq --count | compact | filter {|x| $x.value != ""} | sort-by count
+    $projects | uniq --count | compact | where {|x| $x.value != ""} | sort-by count
 }
 
 # Creates a filter string that can be used in rg later
@@ -186,7 +186,7 @@ def abs_path_2_file [list: list] {
 def add_blame_info [todo: list, path: string, log: string] {
     cd $path
     let todo_blame = ($todo | insert blame blame)
-    $todo_blame | par-each {|x| 
+    $todo_blame | par-each {|x|
       update blame (git blame -L ($x.line | append ["," $x.line] |
       str join "") ($x.file | append ".md" | str join "") err> $log |
         parse "{commit} {author} {date} {time}" | get date.0? )}
@@ -199,9 +199,9 @@ def get_retrospective [time: string, path: string, regex: string] {
     # In the end we skip one, because we dont want the current commit in this
     # TODO I guess what we actually want are "those that have been deleted in the past"
     # So we should compare older commits to the current one and take some diff
-    let revs = (run-external "git" "rev-list" "--all" $"--max-age=($time_rev)" 
+    let revs = (run-external "git" "rev-list" "--all" $"--max-age=($time_rev)"
                | lines | skip 1)
-    let r = (run-external "git" "grep" "-E" "-e" $regex ...$revs 
+    let r = (run-external "git" "grep" "-E" "-e" $regex ...$revs
             | lines | parse '{rev}:{file}:{todo_retro}' | select todo_retro | uniq)
     $r
 }
@@ -212,7 +212,7 @@ export def otd [table: table, item_number: int] {
   let item = ($table | get $item_number)
   try {
     run-external ($env.EDITOR) ([($config.TODO_FILE_PATH), "/", ($item.file), ".md"] | str join) "-c" ($item.line)
-  } catch { 
+  } catch {
     print $"Couldn't parse table to open in ($env.EDITOR)"
   }
 }
@@ -225,7 +225,7 @@ def replace_with_glyth [list: table] {
 
 def get_glyth [key] {
 
-    let glyths = ({ 
+    let glyths = ({
         " ": 😏
         "x": 😀
         "o": 🤔
