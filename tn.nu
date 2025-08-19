@@ -72,11 +72,18 @@ def generate_todos [
                     log: string
                   ]: nothing -> table {
          let excludes = (generate_excludes_list $todo_file_path $excludedir)
-         let todos = (filter_todos $todo_file_path $filter $excludes $log)
+         mut todos = (filter_todos $todo_file_path $filter $excludes $log)
+
          # Filter by project and context
-         let tn = (get_project_context_filter $todos $project $context $log)
+         if ($project | is-not-empty) {
+           $todos = (apply_filter $todos "+" $project $log)
+         }
+         if ($context | is-not-empty) {
+          $todos = (apply_filter $todos "@" $context $log)
+         }
+
          # Parse it to a table
-         let table = (parse_to_table $tn)
+         let table = (parse_to_table $todos)
          let t_abs_path = (abs_path_2_file $table)
          let t_glyth = (replace_with_glyth $t_abs_path)
          $t_glyth
@@ -158,19 +165,14 @@ def generate_excludes_list [path: string, excludes: list<string>]: nothing -> st
 }
 
 # Get a List of all work items filtered by +project and @context
-def get_project_context_filter [all_workitems: string, project: string, context: string, log: string]: nothing -> string {
+def apply_filter [input: string, filter_type: string, filter: string log: string]: nothing -> string {
 
-  # Filter them by project or let the project_list be the list if there is no project given
-  let project_list = (if (($project | str length) > 2 ) {
-      $all_workitems | rg -w $"\\+($project err> $log)"
-  } else { $all_workitems })
+  # "+" filters for project and "@" for context
+  let filtered_items = (if (($filter | str length) > 2 ) {
+      $input | rg -w $"($filter_type)($filter err> $log)"
+  } else { $input })
 
-  # Filter above filter by context or let the context_filter be the project_list if there is no context given
-  let context_list = (if (($context | str length) > 2 ) {
-      $project_list | rg -w $"@($context err> $log)"
-  } else { $project_list })
-
-  $context_list
+  $filtered_items
 }
 
 # Parse the string given by ripgrep to a table

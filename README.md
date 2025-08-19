@@ -1,14 +1,17 @@
 # Todo-nu
 
-Yet another Todo script which:
+Yet another Todo script which uses:
 
-- Uses [nushell](https://github.com/nushell/nushell), [ripgrep](https://github.com/BurntSushi/ripgrep) and git.
+- [nushell](https://github.com/nushell/nushell)
+- [ripgrep](https://github.com/BurntSushi/ripgrep)
+- git
+
 - Is inspired from the todo.txt format and the Zettelkasten and GTD methods
 - Tries to be as simple as possible
 - Works for me approach
 
 Nushell is under heavy development.
-The current version works with v0.150. for older versions check older commits.
+The current version works with v0.106.1. for older versions check older commits.
 
 ## Inspiration
 
@@ -120,7 +123,7 @@ but not optional.
 - [x] Or make a nvim plugin, that gets the todos into a telescope fzf list
 - [x] Create a Link directly to the file and open it in $EDITOR
 - [ ] Unify context, project and exclude filters
-- [ ] Add some tests from http://www.nushell.sh/book/testing.html
+- [ ] Add some [nushell tests](http://www.nushell.sh/book/testing.html)
 - [ ] Make searchpath a list for multiple todo sources
 - [ ] Get the context and project filters into the retrospective
 - [ ] Get the list feature into the retrospective as well
