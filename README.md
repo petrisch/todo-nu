@@ -56,6 +56,7 @@ There is two exclude mechanisms:
 
 - Exclude subdirectories from the path in the config
 - Exclude contexts eg. the "@maybe" context with `td -e maybe`
+- Excludes can be a list like: `[month, year]`
 
 ### List
 
@@ -122,6 +123,7 @@ but not optional.
 - [x] Give a "works from nu version > on"
 - [x] Or make a nvim plugin, that gets the todos into a telescope fzf list
 - [x] Create a Link directly to the file and open it in $EDITOR
+- [x] Make excludes to be a optional list, to exclude multiple contexts.
 - [ ] Unify context, project and exclude filters
 - [ ] Add some [nushell tests](http://www.nushell.sh/book/testing.html)
 - [ ] Make searchpath a list for multiple todo sources

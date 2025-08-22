@@ -14,7 +14,7 @@ export def td [
     --done(-d) # Only done todos
     --project(-p): string = "" # All todos within a +project
     --context(-c): string  = "" # All todos within a @context
-    --exclude(-e): string = "" # Exclude contexts like @maybe
+    --exclude(-e): string = "" # Exclude contexts like @maybe, can be a list like: [month, year]
     --retro(-r): string = "" # A retrospective for todos in git history
     --list(-l): string = "" # List all @contexts or +projects used.
     --rand(-x) # Pick a random todo
@@ -25,29 +25,32 @@ export def td [
 
   let config = (load_config)
 
-   let generate_todos = (($retro | is-empty) and ($list | is-empty))
-   let list_contexts = ($retro | is-empty)
+   let todos_tobe_generated = (($retro | is-empty) and ($list | is-empty))
+   let context_tobe_listed = ($retro | is-empty)
    let filter = (get_list_filter $all $done $config.PARTIAL)
+   let ex = (strToList $exclude)
 
      if $version {
-         let version = "0.1.0"
+         let version = "0.1.1"
          $version
-      } else if $generate_todos {
-         let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
-         let td_filtered = (filter_excluded_contexts $exclude $td | sort-by -i file)
+      } else if $todos_tobe_generated {
+         let td = (generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter
+                    $project $context $ex $config.LOGFILE | sort-by -i file)
          if $blame {
-             let td_blamed_filtered = add_blame_info $td_filtered $config.TODO_FILE_PATH $config.LOGFILE
+             let td_blamed_filtered = add_blame_info $td $config.TODO_FILE_PATH $config.LOGFILE
              if $rand { randomize $td_blamed_filtered } else {$td_blamed_filtered}
          } else {
-             if $rand { randomize $td_filtered } else if $json { $td_filtered | to json } else { $td_filtered }
+             if $rand { randomize $td} else if $json { $td | to json } else { $td}
          }
-      } else if $list_contexts {
+      } else if $context_tobe_listed {
            if $list == "@" {
-             let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
+             let td = (generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter
+                     $project $context $ex $config.LOGFILE)
              let l = list_contexts $td
              if $rand { randomize $l } else {$l}
           } else if $list == "+" {
-             let td = generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter $project $context $config.LOGFILE
+             let td = (generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter
+                     $project $context $ex $config.LOGFILE)
              let l = list_projects $td
              if $rand { randomize $l } else {$l}
            } else { "Either specify '@' for contexts or '+' for projects" }
@@ -69,10 +72,11 @@ def generate_todos [
                     filter: string,
                     project: string,
                     context: string,
+                    exclude: list,
                     log: string
                   ]: nothing -> table {
-         let excludes = (generate_excludes_list $todo_file_path $excludedir)
-         mut todos = (filter_todos $todo_file_path $filter $excludes $log)
+         let exclude_bydir = (generate_excludes_list $todo_file_path $excludedir)
+         mut todos = (filter_todos $todo_file_path $filter $exclude_bydir $log)
 
          # Filter by project and context
          if ($project | is-not-empty) {
@@ -83,19 +87,51 @@ def generate_todos [
          }
 
          # Parse it to a table
-         let table = (parse_to_table $todos)
+         mut table = (parse_to_table $todos)
+
+         # Filter excluded contextes
+         if ($exclude | is-not-empty) {
+          $table = (filter_ex_contexts $exclude $table)
+         }
+
          let t_abs_path = (abs_path_2_file $table)
          let t_glyth = (replace_with_glyth $t_abs_path)
          $t_glyth
 }
 
-# Filter a table by the exclude word, if one is given, treated as a context
-def filter_excluded_contexts [exclude: string todos: table]: nothing -> table {
-    if ($exclude | is-empty) {
-        $todos
-    } else {
+# Filter a table by the exclude word
+def filter_ex_contexts [exclude: list todos: table]: nothing -> table {
+  mut td = $todos
+  for $ex in $exclude {
+        $td = filter_ex_context $ex $td
+  }
+  $td
+}
+
+# Filter a table by the exclude word
+def filter_ex_context [exclude: string todos: table]: nothing -> table {
         $todos | where {|x| not ($x.item | str contains $"@($exclude)")}
+}
+
+def strToList [input: string]: nothing -> list {
+  # Assuming there is never a context starting with a [
+  if ($input | str starts-with "[") {
+    try {
+      # This should parse [foo, bar] to a list object
+      # which is not really valid nuon, but currently works...
+      # it will fail if its a bare string here hence the above.
+      $input | from nuon
+    } catch {
+      print($'Cant convert input: $input to nuon.')
+      exit
     }
+  } else if ($input | is-not-empty) {
+    # if it is a bare string
+    let list = [$input]
+    $list
+  } else {
+    []
+  }
 }
 
 # Get a list of all @contexts beeing used
