@@ -11,7 +11,7 @@ Yet another Todo script which uses:
 - Works for me approach
 
 Nushell is under heavy development.
-The current version works with v0.106.1. for older versions check older commits.
+The current version works with v0.112.2. For older versions check older commits.
 
 ## Inspiration
 

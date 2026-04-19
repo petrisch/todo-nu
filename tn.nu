@@ -31,7 +31,7 @@ export def td [
    let ex = (strToList $exclude)
 
      if $version {
-         let version = "0.1.1"
+         let version = "0.1.2"
          $version
       } else if $todos_tobe_generated {
          let td = (generate_todos $config.TODO_FILE_PATH $config.EXCLUDEDIR $filter
@@ -94,7 +94,7 @@ def generate_todos [
           $table = (filter_ex_contexts $exclude $table)
          }
 
-         let t_abs_path = (abs_path_2_file $table)
+         let t_abs_path = (abs_path_2_file $todo_file_path $table)
          let t_glyth = (replace_with_glyth $t_abs_path)
          $t_glyth
 }
@@ -216,8 +216,9 @@ def parse_to_table [todos_string: string] {
    $todos_string | lines| parse '{file}.md:{line}:{todo}] {item}' | move item --before file | move todo --before item
 }
 
-def abs_path_2_file [list: list] {
-    $list | update file {|row| $row.file | path basename}
+# Get the relative path to the todo root directory
+def abs_path_2_file [path: string list: list] {
+    $list | update file {|row| $row.file | path split | skip ( $path | path expand | path split | length ) | path join }
 }
 
 # Get the git blame for the last time a todo has been touched
